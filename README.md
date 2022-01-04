@@ -2,7 +2,7 @@
 
 How much would you pay to remove 1 ETH from circulating supply for 1 year?
 
-Deep Freeze is a tokenized patience protocol that enables being paid by the market to explicitly *do nothing* with an asset. No yield farming, no lending, no staking. Be paid to do nothing, and thus keep ETH out of circulation. This enables _implicit_ yield for raw ETH held in cold storage.
+Deep Freeze is a tokenized patience protocol that enables being paid by the market to explicitly *do nothing* with an asset. No yield farming, no lending, no staking. Be paid to do nothing, and thus keep ETH out of circulation. This enables _intrinsic_ yield for raw ETH held in cold storage.
 
 ## Links 
 
@@ -106,6 +106,7 @@ This raw ETH is the target market for Deep Freeze. We do not expect frETH to com
 Deep Freeze will be a 0 governance, 0 administrative protocol. It will be immutable upon launch with the FRZ revenue token. The protocol will have a fixed fee structure to generate revenue to stakers of the FRZ token. A diagram of Alice’s deposit is included here: 
 
 ![image](https://user-images.githubusercontent.com/96018507/148113289-6e2fb61d-2547-477a-9b41-2e3ad63e51f6.png)
+(note: image says 0.5%, the core team decided to reduce this to 0.25% in line standard fees in DeFi).
 
 Stakers of the FRZ token will receive 2 forms of revenue. 
 
