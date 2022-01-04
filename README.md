@@ -1,12 +1,12 @@
 # DeepFreeze
 
-How much would you pay to remove 1 ETH from circulating supply for 1 year?
+How much would you pay to reduce the circulating supply of ETH by 1, for 1 year?
 
 Deep Freeze is a tokenized patience protocol that enables being paid by the market to explicitly *do nothing* with an asset. No yield farming, no lending, no staking. Be paid to do nothing, and thus keep ETH out of circulation. This enables _intrinsic_ yield for raw ETH held in cold storage.
 
 ## Links 
 
-Full white paper available at: https://charliedao.eth.limo/DeepFreeze/DeepFreeze_Simulations.html
+Full white paper available at: https://charliedao-eth.github.io/DeepFreeze/Tokenized_Patience.pdf
 
 A simulations report analyzing 5 different potential "market patience" profiles is available: https://charliedao.eth.limo/DeepFreeze/DeepFreeze_Simulations.html
 
