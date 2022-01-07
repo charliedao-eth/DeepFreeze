@@ -44,7 +44,7 @@ def test_isHintCorrect(admin, alice, hint):
 def test_isPasswordCorrect(admin, alice, password):
     hint = "Hello world"
     deepfreeze = deploy_Factory_DeepFreeze(admin, alice, hint, password)
-    assert hint == deepfreeze.requestHint({"from": alice})
+    assert Web3.keccak(text=password) == deepfreeze.requestPassword({"from": alice})
 
 
 # Test deposit
@@ -97,3 +97,50 @@ def test_withdraw_password(admin, alice, password):
     deepfreeze = deploy_Factory_DeepFreeze(admin, alice, hint, password)
     deepfreeze.deposit({"from": alice, "value": Web3.toWei(1, "Ether")})
     deepfreeze.withdraw(password, {"from": alice})
+
+
+# Test changePassword
+def test_changePassword(admin, alice):
+    hint = "Code"
+    password = "Hello world"
+    deepfreeze = deploy_Factory_DeepFreeze(admin, alice, hint, password)
+    oldPassword = password
+    newPassword = "Future of France"
+    deepfreeze.changePassword(
+        oldPassword, Web3.keccak(text=newPassword), {"from": alice}
+    )
+    assert Web3.keccak(text=newPassword) == deepfreeze.requestPassword({"from": alice})
+
+
+# Test onlyOwner can changePassword
+def test_onlyOwner_changePassword(admin, alice, bob):
+    hint = "Code"
+    password = "Hello world"
+    deepfreeze = deploy_Factory_DeepFreeze(admin, alice, hint, password)
+    oldPassword = password
+    newPassword = "Future of France"
+    with pytest.raises(exceptions.VirtualMachineError):
+        deepfreeze.changePassword(
+            oldPassword, Web3.keccak(text=newPassword), {"from": bob}
+        )
+
+
+# Test TransferOwnership
+def test_transferOwnership(admin, alice, bob):
+    hint = "Code"
+    password = "Hello world"
+    newPassword = Web3.keccak(text="Future of France")
+    deepfreeze = deploy_Factory_DeepFreeze(admin, alice, hint, password)
+    deepfreeze.transferOwnership(bob, password, newPassword, {"from": alice})
+    assert bob == deepfreeze.FreezerOwner()
+    assert newPassword == deepfreeze.requestPassword({"from": bob})
+
+
+# Test onlyOwner canDo
+def test_onlyOwnerTransferOwnership(admin, alice, bob):
+    hint = "Code"
+    password = "Hello world"
+    newPassword = Web3.keccak(text="Future of France")
+    deepfreeze = deploy_Factory_DeepFreeze(admin, alice, hint, password)
+    with pytest.raises(exceptions.VirtualMachineError):
+        deepfreeze.transferOwnership(bob, password, newPassword, {"from": bob})
