@@ -10,25 +10,25 @@ def test_isOwner(admin, userId):
     password = "Hello world"
     user = accounts[userId]
     deepfreeze = deploy_Factory_DeepFreeze(admin, user, hint, password)
-    assert user == deepfreeze.FreezerOwner()
+    assert user == deepfreeze.freezerOwner()
 
 
 # Test onlyOwner
-def test_onlyOwner_canRequestHint(admin, alice, bob):
+def test_onlyOwner_canGetHint(admin, alice, bob):
     hint = "Code"
     password = "Hello world"
     deepfreeze = deploy_Factory_DeepFreeze(admin, alice, hint, password)
     with pytest.raises(exceptions.VirtualMachineError):
-        deepfreeze.requestHint({"from": bob})
+        deepfreeze.getHint({"from": bob})
 
 
 # Test onlyOwner
-def test_onlyOwner_canRequestPassword(admin, alice, bob):
+def test_onlyOwner_canGetPassword(admin, alice, bob):
     hint = "Code"
     password = "Hello world"
     deepfreeze = deploy_Factory_DeepFreeze(admin, alice, hint, password)
     with pytest.raises(exceptions.VirtualMachineError):
-        deepfreeze.requestPassword({"from": bob})
+        deepfreeze.getPassword({"from": bob})
 
 
 # Test Hint
@@ -36,7 +36,7 @@ def test_onlyOwner_canRequestPassword(admin, alice, bob):
 def test_isHintCorrect(admin, alice, hint):
     password = "Hello world"
     deepfreeze = deploy_Factory_DeepFreeze(admin, alice, hint, password)
-    assert hint == deepfreeze.requestHint({"from": alice})
+    assert hint == deepfreeze.getHint({"from": alice})
 
 
 # Test password
@@ -44,7 +44,7 @@ def test_isHintCorrect(admin, alice, hint):
 def test_isPasswordCorrect(admin, alice, password):
     hint = "Hello world"
     deepfreeze = deploy_Factory_DeepFreeze(admin, alice, hint, password)
-    assert Web3.keccak(text=password) == deepfreeze.requestPassword({"from": alice})
+    assert Web3.keccak(text=password) == deepfreeze.getPassword({"from": alice})
 
 
 # Test deposit
@@ -109,7 +109,7 @@ def test_changePassword(admin, alice):
     deepfreeze.changePassword(
         oldPassword, Web3.keccak(text=newPassword), {"from": alice}
     )
-    assert Web3.keccak(text=newPassword) == deepfreeze.requestPassword({"from": alice})
+    assert Web3.keccak(text=newPassword) == deepfreeze.getPassword({"from": alice})
 
 
 # Test onlyOwner can changePassword
@@ -132,8 +132,8 @@ def test_transferOwnership(admin, alice, bob):
     newPassword = Web3.keccak(text="Future of France")
     deepfreeze = deploy_Factory_DeepFreeze(admin, alice, hint, password)
     deepfreeze.transferOwnership(bob, password, newPassword, {"from": alice})
-    assert bob == deepfreeze.FreezerOwner()
-    assert newPassword == deepfreeze.requestPassword({"from": bob})
+    assert bob == deepfreeze.freezerOwner()
+    assert newPassword == deepfreeze.getPassword({"from": bob})
 
 
 # Test onlyOwner canDo
@@ -144,3 +144,22 @@ def test_onlyOwnerTransferOwnership(admin, alice, bob):
     deepfreeze = deploy_Factory_DeepFreeze(admin, alice, hint, password)
     with pytest.raises(exceptions.VirtualMachineError):
         deepfreeze.transferOwnership(bob, password, newPassword, {"from": bob})
+
+
+# Test onlyOwner can lock
+def test_onlyOwnerCanLock(admin, alice, bob):
+    hint = "Code"
+    password = "Hello world"
+    deepfreeze = deploy_Factory_DeepFreeze(admin, alice, hint, password)
+    deepfreeze.deposit({"from": alice, "value": Web3.toWei(1, "Ether")})
+    with pytest.raises(exceptions.VirtualMachineError):
+        deepfreeze.lock(1, {"from": bob})
+
+
+# def test_lockingTime(admin, alice):
+#   hint = "Code"
+#  password = "Hello world"
+# deepfreeze = deploy_Factory_DeepFreeze(admin, alice, hint, password)
+# deepfreeze.deposit({"from": alice, "value": Web3.toWei(1, "Ether")})
+# deepfreeze.lock(1, {"from": alice})
+# print(deepfreeze.lockDate(), deepfreeze.unlockDate())

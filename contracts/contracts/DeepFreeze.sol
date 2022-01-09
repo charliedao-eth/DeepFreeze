@@ -3,23 +3,28 @@ pragma solidity ^0.8.0;
 
 contract DeepFreeze {
     // Var declarations
-    address payable public FreezerOwner;
-    string internal _hint;
-    bytes32 internal _password;
-    uint256 public _lockDate;
-    uint256 public _timeToLock;
+    address payable public freezerOwner;
+    string internal hint;
+    bytes32 internal password;
+    uint256 internal lockingDate;
+    uint256 internal timeToLock;
+    uint256 internal unlockingDate;
+    uint256 internal lockedAmount;
+    uint256 constant PROGRESS_THRESHOLD = 67;
+    uint256 public constant MIN_LOCK_DAYS = 7;
+    uint256 public constant MAX_LOCK_DAYS = 1100;
 
-    enum STATUS {
+    enum Status {
         Open,
         Closed
     }
-    STATUS public Status;
 
-    enum PASSWORD_SAFE {
+    enum PasswordSafe {
         yes,
         no
     }
-    PASSWORD_SAFE private PasswordSafe = PASSWORD_SAFE.yes;
+    PasswordSafe private passwordSafe = PasswordSafe.yes;
+    Status private status = Status.Open;
 
     // Events
     event FundDeposited(address indexed freezer, uint256 amount);
@@ -33,33 +38,40 @@ contract DeepFreeze {
 
     constructor(
         address eoa,
-        string memory hint_,
-        bytes32 password_
+        string memory _hint,
+        bytes32 _password
     ) {
-        FreezerOwner = payable(eoa);
-        _hint = hint_;
-        _password = password_;
-        Status = STATUS.Open;
+        freezerOwner = payable(eoa);
+        hint = _hint;
+        password = _password;
     }
 
     // Modifier
     modifier onlyOwner() {
-        require(
-            msg.sender == FreezerOwner,
-            "Only the freezer owner can do that!"
-        );
+        require(msg.sender == freezerOwner);
         _;
     }
 
-    // Functions
+    // Fallback function
+
+    function deposit() public payable {
+        require(status == Status.Open);
+        emit FundDeposited(address(this), msg.value);
+    }
+
+    // Public functions
 
     function changePassword(string memory oldPassword, bytes32 newPassword)
         public
         onlyOwner
     {
-        require(keccak256(abi.encodePacked(oldPassword)) == _password); // Wrong password
-        _password = newPassword;
-        PasswordSafe = PASSWORD_SAFE.yes;
+        require(keccak256(abi.encodePacked(oldPassword)) == password); // Wrong password
+        password = newPassword;
+        passwordSafe = PasswordSafe.yes;
+    }
+
+    function changeHint(string memory _hint) public onlyOwner {
+        hint = _hint;
     }
 
     function transferOwnership(
@@ -68,40 +80,87 @@ contract DeepFreeze {
         bytes32 newPassword
     ) public onlyOwner {
         require(newOwner != address(0)); // Zero address
-        PasswordSafe = PASSWORD_SAFE.no;
+        passwordSafe = PasswordSafe.no;
         changePassword(oldPassword, newPassword);
-        require(PasswordSafe == PASSWORD_SAFE.yes);
-        address oldOwner = FreezerOwner;
-        FreezerOwner = payable(newOwner);
+        require(passwordSafe == PasswordSafe.yes);
+        address oldOwner = freezerOwner;
+        freezerOwner = payable(newOwner);
         emit OwnershipTransferred(oldOwner, newOwner);
     }
 
-    function requestHint() public view onlyOwner returns (string memory) {
-        return _hint;
+    function lock(uint256 _timeToLock) public onlyOwner {
+        require(address(this).balance != 0); // DeepFreeze empty
+        require(status == Status.Open);
+        require(_timeToLock > MIN_LOCK_DAYS && _timeToLock < MAX_LOCK_DAYS);
+        status = Status.Closed;
+        lockingDate = block.timestamp;
+        timeToLock = (_timeToLock * 1 days);
+        unlockingDate = lockingDate + timeToLock;
+        uint256 lockedAmount = address(this).balance;
+        // Call Mint function here, probably an interface
     }
 
-    function requestPassword() public view onlyOwner returns (bytes32) {
-        return _password;
-    }
-
-    function deposit() public payable {
-        emit FundDeposited(address(this), msg.value);
-    }
-
-    function lock(uint256 timeToLock_) public onlyOwner {
-        require(balance != 0);
-        require(Status == STATUS.Open);
-        _lockDate = block.timestamp;
-        _timeToLock = timeToLock_;
-        // continue
-    }
-
-    function withdraw(string memory password_) public onlyOwner {
-        require(keccak256(abi.encodePacked(password_)) == _password); // Wrong password
-        uint256 balance = address(this).balance;
-        require(balance != 0); // DeepFreeze empty
+    function withdraw(string memory _password) public onlyOwner {
+        require(keccak256(abi.encodePacked(_password)) == password); // Wrong password
+        require(address(this).balance != 0); // DeepFreeze empty
         address freezerAddress = address(this);
-        emit FundWithdrawed(freezerAddress, FreezerOwner, balance);
-        selfdestruct(FreezerOwner);
+        emit FundWithdrawed(
+            freezerAddress,
+            freezerOwner,
+            address(this).balance
+        );
+        selfdestruct(freezerOwner);
+    }
+
+    // Private function
+
+    // View functions
+
+    function getHint() public view onlyOwner returns (string memory) {
+        return hint;
+    }
+
+    function getPassword() public view onlyOwner returns (bytes32) {
+        return password;
+    }
+
+    function getLockingDate() public view returns (uint256) {
+        return lockingDate;
+    }
+
+    function getUnlockingDate() public view returns (uint256) {
+        return unlockingDate;
+    }
+
+    function getLockedAmount() public view returns (uint256) {
+        return lockedAmount;
+    }
+
+    function getStatus() public view returns (Status) {
+        return status;
+    }
+
+    function calculateUnlockCost() public view returns (uint256) {
+        uint256 unlockCost;
+        uint256 progress = calculateProgress(
+            block.timestamp,
+            lockingDate,
+            timeToLock
+        );
+        if (progress >= 100) {
+            unlockCost = 0;
+        } else if (progress <= PROGRESS_THRESHOLD) {
+            // continue
+        }
+        return unlockCost;
+    }
+
+    // Pure function
+    function calculateProgress(
+        uint256 _nBlock,
+        uint256 _lockingDate,
+        uint256 _timeToLock
+    ) internal pure returns (uint256) {
+        return (100 * (_nBlock - _lockingDate)) / _timeToLock;
     }
 }
