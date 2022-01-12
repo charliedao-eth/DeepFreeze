@@ -4,8 +4,9 @@ import "./DeepFreeze.sol";
 
 contract DeepFreezeFactory {
     address public creatorOwner;
-    DeepFreeze[] public deployedFreezer;
-    mapping(address => DeepFreeze[]) public userFreezer;
+    address[] public userAddress;
+    DeepFreeze[] public deployedDeepFreeze;
+    mapping(address => DeepFreeze[]) public userToDeepFreeze;
     event FreezerDeployed(address from, address freezerAddress);
 
     constructor() {
@@ -18,8 +19,9 @@ contract DeepFreezeFactory {
             hint_,
             password_
         );
-        userFreezer[msg.sender].push(new_freezer_address);
-        deployedFreezer.push(new_freezer_address);
+        userAddress.push(msg.sender);
+        userToDeepFreeze[msg.sender].push(new_freezer_address);
+        deployedDeepFreeze.push(new_freezer_address);
         emit FreezerDeployed(msg.sender, address(new_freezer_address));
     }
 }

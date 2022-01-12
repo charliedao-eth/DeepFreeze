@@ -15,7 +15,7 @@ def create_DeepFreeze(factory, user, hint, password):
 
 # Return a DeepFreeze object
 def get_DeepFreezeContract(factory, admin, user, freezerID):
-    deepfreeze_address = factory.userFreezer(user, freezerID, {"from": admin})
+    deepfreeze_address = factory.userToDeepFreeze(user, freezerID, {"from": admin})
     with open("DeepFreeze_abi.json") as f:
         abi = json.load(f)
     deepfreeze = Contract.from_abi("deepfreeze", deepfreeze_address, abi)

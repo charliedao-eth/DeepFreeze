@@ -1,5 +1,5 @@
 from brownie import accounts, exceptions
-from deploy_functions import deploy_Factory_DeepFreeze
+from scripts.deploy_functions import deploy_Factory_DeepFreeze
 from web3 import Web3
 import pytest
 
