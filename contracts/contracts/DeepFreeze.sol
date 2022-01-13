@@ -4,20 +4,22 @@ pragma solidity ^0.8.0;
 /// @title DeepFreeze
 /// @author CharlieDAO
 
+interface IFactory {
+    function rewardLocking(address) external;
+}
+
 contract DeepFreeze {
     // Var declarations
     address payable public freezerOwner;
+    address public factoryAddress;
     string internal hint;
     bytes32 internal password;
     uint256 internal lockingDate;
     uint256 internal timeToLock;
     uint256 internal unlockingDate;
     uint256 internal lockedAmount;
-    uint256 internal frToken;
-    uint256 internal constant PROGRESS_THRESHOLD = 67;
     uint256 internal constant MIN_LOCK_DAYS = 7;
     uint256 internal constant MAX_LOCK_DAYS = 1100;
-    uint256 internal constant N_DAYS = 365;
 
     enum Status {
         Open,
@@ -33,6 +35,11 @@ contract DeepFreeze {
 
     // Events
     event FundDeposited(address indexed freezer, uint256 amount);
+    event FundLocked(
+        address indexed freezer,
+        uint256 amount,
+        uint256 lockPeriod
+    );
     event FundWithdrawed(address indexed freezer, address _to, uint256 amount);
     event OwnershipTransferred(
         address indexed previousOwner,
@@ -42,10 +49,12 @@ contract DeepFreeze {
     // Constructor
 
     constructor(
+        address _factoryAddress,
         address eoa,
         string memory _hint,
         bytes32 _password
     ) {
+        factoryAddress = _factoryAddress;
         freezerOwner = payable(eoa);
         hint = _hint;
         password = _password;
@@ -108,8 +117,8 @@ contract DeepFreeze {
         timeToLock = (_timeToLock * 1 days);
         unlockingDate = lockingDate + timeToLock;
         lockedAmount = address(this).balance;
-        frToken = calculate_frToken(lockedAmount, timeToLock);
-        // Call Mint function here, probably an interface
+        IFactory(factoryAddress).rewardLocking(address(this));
+        emit FundLocked(address(this), lockedAmount, timeToLock);
     }
 
     /// @notice Wihtdraw the funds from the contract to owner address
@@ -125,8 +134,6 @@ contract DeepFreeze {
         );
         selfdestruct(freezerOwner);
     }
-
-    // Private function
 
     // View functions
 
@@ -166,62 +173,5 @@ contract DeepFreeze {
     /// @return Return 1 if DeepFreeze is locked
     function getStatus() public view returns (Status) {
         return status;
-    }
-
-    /// @notice Get the number of UNIX-Timestamp when the contracts will unlock
-    /// @return Return the number of UNIX-Timestamp when the contracts will unlock
-    function getFrToken() public view returns (uint256) {
-        return frToken;
-    }
-
-    /// @notice Get the cost for unlocking the DeepFreeze
-    /// @return Return 0 if wait the locking period, pay a penalty if not waitting 67 % of the time, make partial profit if wait between 67 % and 100%
-    function getUnlockCost() public view returns (uint256) {
-        uint256 progress = calculateProgress(
-            block.timestamp,
-            lockingDate,
-            timeToLock
-        );
-        return calculateWithdrawCost(progress, frToken);
-    }
-
-    // Pure function
-
-    /// @notice Get the amount of frAsset that will be minted
-    /// @return Return the amount of frAsset that will be minted
-    function calculate_frToken(uint256 _lockedAmount, uint256 _timeToLock)
-        internal
-        pure
-        returns (uint256)
-    {
-        uint256 token = (_timeToLock * _lockedAmount) / (N_DAYS * 1 days);
-        return token;
-    }
-
-    function calculateProgress(
-        uint256 _nBlock,
-        uint256 _lockingDate,
-        uint256 _timeToLock
-    ) internal pure returns (uint256) {
-        return (100 * (_nBlock - _lockingDate)) / _timeToLock;
-    }
-
-    function calculateWithdrawCost(uint256 _progress, uint256 _frToken)
-        internal
-        pure
-        returns (uint256)
-    {
-        uint256 unlockCost;
-        if (_progress >= 100) {
-            unlockCost = 0;
-        } else if (_progress < 67) {
-            unlockCost =
-                _frToken +
-                ((((20 * _frToken) / 100) * (100 - ((_progress * 3) / 2))) /
-                    100);
-        } else {
-            unlockCost = (_frToken * (100 - ((_progress - 67) * 3))) / 100;
-        }
-        return unlockCost;
     }
 }
