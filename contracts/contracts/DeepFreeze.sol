@@ -6,6 +6,8 @@ pragma solidity ^0.8.0;
 
 interface IFactory {
     function rewardLocking(address) external;
+
+    function earlyWithdraw(address) external;
 }
 
 contract DeepFreeze {
@@ -62,7 +64,12 @@ contract DeepFreeze {
 
     // Modifier
     modifier onlyOwner() {
-        require(msg.sender == freezerOwner);
+        require(msg.sender == freezerOwner, "Only owner can do that");
+        _;
+    }
+
+    modifier onlyFactory() {
+        require(msg.sender == factoryAddress, "Only Factory can call");
         _;
     }
 
@@ -81,7 +88,10 @@ contract DeepFreeze {
         public
         onlyOwner
     {
-        require(keccak256(abi.encodePacked(oldPassword)) == password); // Wrong password
+        require(
+            keccak256(abi.encodePacked(oldPassword)) == password,
+            "Wrong password"
+        );
         password = newPassword;
         passwordSafe = PasswordSafe.yes;
     }
@@ -98,7 +108,7 @@ contract DeepFreeze {
         string memory oldPassword,
         bytes32 newPassword
     ) public onlyOwner {
-        require(newOwner != address(0)); // Zero address
+        require(newOwner != address(0), "Zero address");
         passwordSafe = PasswordSafe.no;
         changePassword(oldPassword, newPassword);
         require(passwordSafe == PasswordSafe.yes);
@@ -109,9 +119,12 @@ contract DeepFreeze {
 
     /// @notice Lock the DeepFreeze, when locking users receive frAssets (i.e., 1 ETH lock 365 days mint 1 frETH)
     function lock(uint256 _timeToLock) public onlyOwner {
-        require(address(this).balance != 0); // DeepFreeze empty
-        require(status == Status.Open);
-        require(_timeToLock > MIN_LOCK_DAYS && _timeToLock < MAX_LOCK_DAYS);
+        require(address(this).balance != 0, "DeepFreeze empty");
+        require(status == Status.Open, "DeepFreeze already closed");
+        require(
+            _timeToLock > MIN_LOCK_DAYS && _timeToLock < MAX_LOCK_DAYS,
+            "Bad days input"
+        );
         status = Status.Closed;
         lockingDate = block.timestamp;
         timeToLock = (_timeToLock * 1 days);
@@ -124,14 +137,31 @@ contract DeepFreeze {
     /// @notice Wihtdraw the funds from the contract to owner address
     /// @dev Calling selfdestruct for gas refunding
     function withdraw(string memory _password) public onlyOwner {
-        require(keccak256(abi.encodePacked(_password)) == password); // Wrong password
-        require(address(this).balance != 0); // DeepFreeze empty
-        address freezerAddress = address(this);
-        emit FundWithdrawed(
-            freezerAddress,
-            freezerOwner,
-            address(this).balance
+        require(
+            keccak256(abi.encodePacked(_password)) == password,
+            "Wrong password"
         );
+        require(address(this).balance != 0, "DeepFreeze empty");
+        if (block.timestamp >= getUnlockingDate()) {
+            address freezerAddress = address(this);
+            emit FundWithdrawed(
+                freezerAddress,
+                freezerOwner,
+                address(this).balance
+            );
+            selfdestruct(freezerOwner);
+        } else {
+            IFactory(factoryAddress).earlyWithdraw(address(this));
+        }
+    }
+
+    function earlyWithdraw(address _stakingFRZ, uint256 _fees)
+        public
+        payable
+        onlyFactory
+    {
+        (bool sent, ) = payable(_stakingFRZ).call{value: _fees}("");
+        require(sent, "Failed to send Ether");
         selfdestruct(freezerOwner);
     }
 

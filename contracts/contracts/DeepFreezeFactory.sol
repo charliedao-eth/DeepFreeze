@@ -16,16 +16,23 @@ interface IDeepFreeze {
     function getStatus() external view returns (uint256);
 
     function freezerOwner() external view returns (address);
+
+    function earlyWithdraw(address, uint256) external;
 }
 
 interface IERC20 {
+    function balanceOf(address) external view returns (uint256);
+
     function mint(address, uint256) external;
+
+    function burn(address, uint256) external;
 }
 
 contract DeepFreezeFactory {
     address public creatorOwner;
     address[] public userAddress;
     address public frETH;
+    address public stakingFRZ;
     DeepFreeze[] public deployedDeepFreeze;
     uint256 internal constant N_DAYS = 365;
     uint256 internal constant PROGRESS_THRESHOLD = 67;
@@ -33,17 +40,18 @@ contract DeepFreezeFactory {
     mapping(address => uint256) internal frTokenMinted;
     event FreezerDeployed(address from, address freezerAddress);
 
-    constructor(address _frETH) {
+    constructor(address _frETH, address _stakingFRZ) {
         creatorOwner = msg.sender;
         frETH = _frETH;
+        stakingFRZ = _stakingFRZ;
     }
 
-    function createDeepFreeze(string memory hint_, bytes32 password_) public {
+    function createDeepFreeze(string memory _hint, bytes32 _password) public {
         DeepFreeze new_freezer_address = new DeepFreeze(
             address(this),
             msg.sender,
-            hint_,
-            password_
+            _hint,
+            _password
         );
         userAddress.push(msg.sender);
         userToDeepFreeze[msg.sender].push(new_freezer_address);
@@ -74,10 +82,30 @@ contract DeepFreezeFactory {
         uint256 lockedAmount = IDeepFreeze(_deepFreezeAddress)
             .getLockedAmount();
         uint256 timeToLock = IDeepFreeze(_deepFreezeAddress).getTimeToLock();
-        uint256 frTokenToMint = calculate_frToken(lockedAmount, timeToLock);
+        uint256 frTokenToMint = _calculate_frToken(lockedAmount, timeToLock);
         address _freezerOwner = IDeepFreeze(_deepFreezeAddress).freezerOwner();
         IERC20(frETH).mint(_freezerOwner, frTokenToMint);
         frTokenMinted[_deepFreezeAddress] = frTokenToMint;
+    }
+
+    function earlyWithdraw(address _deepFreezeAddress) public {
+        address _freezerOwner = IDeepFreeze(_deepFreezeAddress).freezerOwner();
+        uint256 _status = IDeepFreeze(_deepFreezeAddress).getStatus();
+        uint256 _cost = getUnlockCost(_deepFreezeAddress);
+        uint256 _fees = getFees(_deepFreezeAddress);
+        require(
+            isDeepFreeze(_deepFreezeAddress),
+            "Caller is not a registered DeepFreeze"
+        );
+        require(_status == 1, "DeepFreeze not locked");
+        require(_cost > 0, "This is not an early withdraw");
+        require(
+            IERC20(frETH).balanceOf(_freezerOwner) >= _cost,
+            "Not enough frETH"
+        );
+        IERC20(frETH).burn(_freezerOwner, _cost);
+        IERC20(frETH).mint(stakingFRZ, (_cost * 50) / 100);
+        IDeepFreeze(_deepFreezeAddress).earlyWithdraw(stakingFRZ, _fees);
     }
 
     // View functions
@@ -90,11 +118,37 @@ contract DeepFreezeFactory {
         return frTokenMinted[_deepFreezeAddress];
     }
 
+    function getProgress(address _deepFreezeAddress)
+        public
+        view
+        returns (uint256)
+    {
+        uint256 _lockingDate = IDeepFreeze(_deepFreezeAddress).getLockingDate();
+        uint256 _timeToLock = IDeepFreeze(_deepFreezeAddress).getTimeToLock();
+        return _calculateProgress(block.timestamp, _lockingDate, _timeToLock);
+    }
+
+    function getUnlockCost(address _deepFreezeAddress)
+        public
+        view
+        returns (uint256)
+    {
+        uint256 _progress = getProgress(_deepFreezeAddress);
+        uint256 _frTokenMinted = frTokenMinted[_deepFreezeAddress];
+        return _calculateWithdrawCost(_progress, _frTokenMinted);
+    }
+
+    function getFees(address _deepFreezeAddress) public view returns (uint256) {
+        uint256 _lockedAmount = IDeepFreeze(_deepFreezeAddress)
+            .getLockedAmount();
+        return _calculateFees(_lockedAmount);
+    }
+
     // Pure functions
 
     /// @notice Get the amount of frAsset that will be minted
     /// @return Return the amount of frAsset that will be minted
-    function calculate_frToken(uint256 _lockedAmount, uint256 _timeToLock)
+    function _calculate_frToken(uint256 _lockedAmount, uint256 _timeToLock)
         internal
         pure
         returns (uint256)
@@ -102,21 +156,8 @@ contract DeepFreezeFactory {
         uint256 token = (_timeToLock * _lockedAmount) / (N_DAYS * 1 days);
         return token;
     }
-}
 
-/*
-/// @notice Get the cost for unlocking the DeepFreeze
-    /// @return Return 0 if wait the locking period, pay a penalty if not waitting 67 % of the time, make partial profit if wait between 67 % and 100%
-    function getUnlockCost() public view returns (uint256) {
-        uint256 progress = calculateProgress(
-            block.timestamp,
-            lockingDate,
-            timeToLock
-        );
-        return calculateWithdrawCost(progress, frToken);
-    }
-
-    function calculateProgress(
+    function _calculateProgress(
         uint256 _nBlock,
         uint256 _lockingDate,
         uint256 _timeToLock
@@ -124,7 +165,7 @@ contract DeepFreezeFactory {
         return (100 * (_nBlock - _lockingDate)) / _timeToLock;
     }
 
-    function calculateWithdrawCost(uint256 _progress, uint256 _frToken)
+    function _calculateWithdrawCost(uint256 _progress, uint256 _frToken)
         internal
         pure
         returns (uint256)
@@ -142,4 +183,12 @@ contract DeepFreezeFactory {
         }
         return unlockCost;
     }
-    */
+
+    function _calculateFees(uint256 _lockedAmount)
+        internal
+        pure
+        returns (uint256)
+    {
+        return (_lockedAmount * 25) / 10000;
+    }
+}

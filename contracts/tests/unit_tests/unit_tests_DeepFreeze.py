@@ -154,12 +154,3 @@ def test_onlyOwnerCanLock(admin, alice, bob):
     deepfreeze.deposit({"from": alice, "value": Web3.toWei(1, "Ether")})
     with pytest.raises(exceptions.VirtualMachineError):
         deepfreeze.lock(1, {"from": bob})
-
-
-# def test_lockingTime(admin, alice):
-#   hint = "Code"
-#  password = "Hello world"
-# deepfreeze = deploy_Factory_DeepFreeze(admin, alice, hint, password)
-# deepfreeze.deposit({"from": alice, "value": Web3.toWei(1, "Ether")})
-# deepfreeze.lock(1, {"from": alice})
-# print(deepfreeze.lockDate(), deepfreeze.unlockDate())
