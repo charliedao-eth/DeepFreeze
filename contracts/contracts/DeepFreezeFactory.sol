@@ -26,6 +26,12 @@ interface IERC20 {
     function mint(address, uint256) external;
 
     function burn(address, uint256) external;
+
+    function transferFrom(
+        address,
+        address,
+        uint256
+    ) external returns (bool);
 }
 
 contract DeepFreezeFactory {
@@ -72,19 +78,20 @@ contract DeepFreezeFactory {
         return false;
     }
 
-    function rewardLocking(address _deepFreezeAddress) public {
+    function rewardLocking(
+        address _deepFreezeAddress,
+        uint256 _lockedAmount,
+        uint256 _timeToLock,
+        address _recipient
+    ) external {
+        uint256 status = IDeepFreeze(_deepFreezeAddress).getStatus();
         require(
             isDeepFreeze(_deepFreezeAddress),
             "Caller is not a registered DeepFreeze"
         );
-        uint256 status = IDeepFreeze(_deepFreezeAddress).getStatus();
         require(status == 1, "DeepFreeze not locked");
-        uint256 lockedAmount = IDeepFreeze(_deepFreezeAddress)
-            .getLockedAmount();
-        uint256 timeToLock = IDeepFreeze(_deepFreezeAddress).getTimeToLock();
-        uint256 frTokenToMint = _calculate_frToken(lockedAmount, timeToLock);
-        address _freezerOwner = IDeepFreeze(_deepFreezeAddress).freezerOwner();
-        IERC20(frETH).mint(_freezerOwner, frTokenToMint);
+        uint256 frTokenToMint = _calculate_frToken(_lockedAmount, _timeToLock);
+        IERC20(frETH).mint(_recipient, frTokenToMint);
         frTokenMinted[_deepFreezeAddress] = frTokenToMint;
     }
 
@@ -103,8 +110,8 @@ contract DeepFreezeFactory {
             IERC20(frETH).balanceOf(_freezerOwner) >= _cost,
             "Not enough frETH"
         );
-        IERC20(frETH).burn(_freezerOwner, _cost);
-        IERC20(frETH).mint(stakingFRZ, (_cost * 50) / 100);
+        IERC20(frETH).transferFrom(_freezerOwner, stakingFRZ, _cost / 2);
+        IERC20(frETH).burn(_freezerOwner, _cost / 2);
         IDeepFreeze(_deepFreezeAddress).earlyWithdraw(stakingFRZ, _fees);
     }
 

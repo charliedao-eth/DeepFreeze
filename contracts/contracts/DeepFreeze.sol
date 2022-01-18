@@ -5,9 +5,16 @@ pragma solidity ^0.8.0;
 /// @author CharlieDAO
 
 interface IFactory {
-    function rewardLocking(address) external;
+    function rewardLocking(
+        address,
+        uint256,
+        uint256,
+        address
+    ) external;
 
-    function earlyWithdraw(address) external;
+    function getFees() external view returns (uint256);
+
+    function getUnlockCost() external view returns (uint256);
 }
 
 contract DeepFreeze {
@@ -130,7 +137,12 @@ contract DeepFreeze {
         timeToLock = (_timeToLock * 1 days);
         unlockingDate = lockingDate + timeToLock;
         lockedAmount = address(this).balance;
-        IFactory(factoryAddress).rewardLocking(address(this));
+        IFactory(factoryAddress).rewardLocking(
+            address(this),
+            lockedAmount,
+            timeToLock,
+            freezerOwner
+        );
         emit FundLocked(address(this), lockedAmount, timeToLock);
     }
 
@@ -142,27 +154,31 @@ contract DeepFreeze {
             "Wrong password"
         );
         require(address(this).balance != 0, "DeepFreeze empty");
-        if (block.timestamp >= getUnlockingDate()) {
-            address freezerAddress = address(this);
-            emit FundWithdrawed(
-                freezerAddress,
-                freezerOwner,
-                address(this).balance
-            );
+        if (status == Status.Open) {
             selfdestruct(freezerOwner);
         } else {
-            IFactory(factoryAddress).earlyWithdraw(address(this));
+            if (block.timestamp >= getUnlockingDate()) {
+                address freezerAddress = address(this);
+                emit FundWithdrawed(
+                    freezerAddress,
+                    freezerOwner,
+                    address(this).balance
+                );
+                selfdestruct(freezerOwner);
+            } else {
+                //IFactory(factoryAddress).earlyWithdraw(address(this)); // early here
+            }
         }
     }
 
-    function earlyWithdraw(address _stakingFRZ, uint256 _fees)
-        public
-        payable
-        onlyFactory
-    {
-        (bool sent, ) = payable(_stakingFRZ).call{value: _fees}("");
-        require(sent, "Failed to send Ether");
-        selfdestruct(freezerOwner);
+    // inside heere user have to pay penalty, penalty is query from the factory, user approve erc20, user send penalty
+    // call factory check if penalty is paid
+    // change the way the contract is designed instead of paying in factory requesting user pay in the contract
+    // create getPenalty to pay that return call from factory
+
+    function earlyWithdrawPenalty() private onlyOwner {
+        uint256 ethFees = IFactory(address(this)).getFees();
+        uint256 frPenalty = IFactory(address(this)).getUnlockCost();
     }
 
     // View functions
