@@ -16,6 +16,4 @@ deepfreeze.lock(365, {"from": accounts[1]})
 
 chain.sleep(3600 * 24 * 300)
 chain.mine()
-cost = factory.getUnlockCost(deepfreeze.address)
-token.approve(staking.address,cost*2 ,{"from":accounts[1]})
 deepfreeze.withdraw("hello", {"from": accounts[1]})

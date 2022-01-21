@@ -34,8 +34,7 @@ contract DeepFreeze {
 
     enum Status {
         Open,
-        Closed,
-        Withdrawing
+        Closed
     }
 
     enum PasswordSafe {
@@ -157,7 +156,6 @@ contract DeepFreeze {
             "Wrong password"
         );
         require(address(this).balance != 0, "DeepFreeze empty");
-        require(status == Status.Open || status == Status.Closed,"Withdrawing");
         if (status == Status.Open) {
             selfdestruct(freezerOwner);
         } else {
@@ -189,9 +187,8 @@ contract DeepFreeze {
         sendValue(payable(_stakingFRZ), ethFees);
     }
 
-    function payFrAssetPenalty() private  {
+    function earlyWithdrawPenalty() private onlyOwner {
         uint256 frPenalty = IFactory(address(this)).getUnlockCost();
-        
     }
 
     // Openzeppelin function for sending ETH

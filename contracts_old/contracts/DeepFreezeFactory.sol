@@ -95,6 +95,7 @@ contract DeepFreezeFactory {
         frTokenMinted[_deepFreezeAddress] = frTokenToMint;
     }
 
+    /* modify
     function earlyWithdraw(address _deepFreezeAddress) public {
         address _freezerOwner = IDeepFreeze(_deepFreezeAddress).freezerOwner();
         uint256 _status = IDeepFreeze(_deepFreezeAddress).getStatus();
@@ -113,7 +114,7 @@ contract DeepFreezeFactory {
         IERC20(frETH).transferFrom(_freezerOwner, stakingFRZ, _cost / 2);
         IERC20(frETH).burn(_freezerOwner, _cost / 2);
         IDeepFreeze(_deepFreezeAddress).earlyWithdraw(stakingFRZ, _fees);
-    }
+    } */
 
     // View functions
 
@@ -149,6 +150,29 @@ contract DeepFreezeFactory {
         uint256 _lockedAmount = IDeepFreeze(_deepFreezeAddress)
             .getLockedAmount();
         return _calculateFees(_lockedAmount);
+    }
+
+    function getAmountToBurn(address _deepFreezeAddress)
+        public
+        view
+        returns (uint256)
+    {
+        uint256 minted = getFrTokenMinted(_deepFreezeAddress);
+        uint256 cost = getUnlockCost(_deepFreezeAddress);
+        uint256 amountToBurn = minted + (minted - cost) / 2;
+        return amountToBurn;
+    }
+
+    // check math not good ?
+    function getAmountToPay(address _deepFreezeAddress)
+        public
+        view
+        returns (uint256)
+    {
+        uint256 minted = getFrTokenMinted(_deepFreezeAddress);
+        uint256 cost = getUnlockCost(_deepFreezeAddress);
+        uint256 amountToPay = (minted - cost) / 2;
+        return amountToPay;
     }
 
     // Pure functions
