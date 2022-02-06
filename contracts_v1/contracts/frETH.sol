@@ -16,15 +16,15 @@ contract frETH is ERC20, ERC20Burnable, Ownable {
         _;
     }
 
-    function setOnlyGovernor(address _governorAddress) public onlyOwner {
+    function setOnlyGovernor(address _governorAddress) external onlyOwner {
         governorAddress = _governorAddress;
     }
 
-    function mint(address to, uint256 amount) public onlyGovernor {
+    function mint(address to, uint256 amount) external onlyGovernor {
         _mint(to, amount);
     }
 
-    function burn(address account_, uint256 amount_) public onlyGovernor {
+    function burn(address account_, uint256 amount_) external onlyGovernor {
         _burn(account_, amount_);
     }
 }

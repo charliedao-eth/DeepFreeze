@@ -15,7 +15,7 @@ contract NFTPosition is ERC721URIStorage, Ownable {
         _;
     }
 
-    function setOnlyGovernor(address _governorAddress) public onlyOwner {
+    function setOnlyGovernor(address _governorAddress) external onlyOwner {
         governorAddress = _governorAddress;
     }
 
@@ -24,8 +24,12 @@ contract NFTPosition is ERC721URIStorage, Ownable {
         uint256 _tokenId,
         uint256 _amountLocked,
         uint256 _lockingDate,
-        uint256 _unlockingDate
-    ) public onlyGovernor {
+        uint256 _maturityDate
+    ) external onlyGovernor {
         _safeMint(_to, _tokenId);
+    }
+
+    function burn(uint256 _tokenId) external onlyGovernor {
+        _burn(_tokenId);
     }
 }
