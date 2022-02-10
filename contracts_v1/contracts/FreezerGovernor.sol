@@ -44,18 +44,25 @@ contract FreezerGovernor is Ownable {
         bool active;
     }
 
-    event lockedWETH(address indexed _minter, uint256 _tokenId);
-    event withdrawedWETH(
-        address indexed _withdrawer,
-        uint256 _tokenId,
-        uint256 _amountWithdrawed,
-        uint256 _WethPenalty,
-        uint256 _frPenalty
+    event lockedWETH(
+        address indexed minter,
+        uint256 tokenId,
+        uint256 amounntLocked,
+        uint256 lockingDate,
+        uint256 maturityDate
     );
 
-    IfrETH public frETH;
-    IERC20 public wETH;
-    INFT public nftPosition;
+    event withdrawedWETH(
+        address indexed withdrawer,
+        uint256 tokenId,
+        uint256 amountWithdrawed,
+        uint256 WethPenalty,
+        uint256 frPenalty
+    );
+
+    IfrETH private frETH;
+    IERC20 private wETH;
+    INFT private nftPosition;
 
     constructor(
         address _WETHaddress,
@@ -99,7 +106,15 @@ contract FreezerGovernor is Ownable {
             lockingDate,
             maturityDate
         );
-        emit lockedWETH(msg.sender, _nextId);
+
+        emit lockedWETH(
+            msg.sender,
+            _nextId,
+            _amount,
+            lockingDate,
+            maturityDate
+        );
+
         _nextId += 1;
     }
 

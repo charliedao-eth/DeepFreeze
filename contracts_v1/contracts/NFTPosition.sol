@@ -26,7 +26,7 @@ contract NFTPosition is ERC721URIStorage, Ownable {
         uint256 _lockingDate,
         uint256 _maturityDate
     ) external onlyGovernor {
-        _safeMint(_to, _tokenId);
+        _mint(_to, _tokenId);
     }
 
     function burn(uint256 _tokenId) external onlyGovernor {

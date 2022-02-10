@@ -27,24 +27,17 @@ def deploy_DeepFreeze(admin, weth, freth, nftPosition, frz):
     return deepfreeze
 
 
-admin = accounts[0]
-user = accounts[1]
-value = Web3.toWei(1, "Ether")
+def deploy_contracts(admin):
+    weth = deploy_wETH(admin)
+    freth = deploy_frETH(admin)
+    nft = deploy_NFTPosition(admin)
+    frz = deploy_FRZstaking(admin)
+    deepfreeze = deploy_DeepFreeze(admin, weth, freth, nft, frz)
+    return weth, freth, nft, frz, deepfreeze
 
-weth = deploy_wETH(admin)
-freth = deploy_frETH(admin)
-nft = deploy_NFTPosition(admin)
-frz = deploy_FRZstaking(admin)
-deepfreeze = deploy_DeepFreeze(admin, weth, freth, nft, frz)
-freth.setOnlyGovernor(deepfreeze.address)
-nft.setOnlyGovernor(deepfreeze.address)
 
-weth.deposit({"from": user, "value": value})
-weth.approve(deepfreeze.address, value, {"from": user})
-tx = deepfreeze.lockWETH(value, 365 * 2, {"from": user})
-
-chain.sleep(3600 * 24 * 800)
-chain.mine()
-penalty = deepfreeze.getUnlockCost(1)
-freth.approve(deepfreeze, penalty, {"from": user})
-tx2 = deepfreeze.withdrawWETH(1, {"from": user})
+def deployAndSetAdmin(admin):
+    (weth, freth, nft, frz, deepfreeze) = deploy_contracts(admin)
+    freth.setOnlyGovernor(deepfreeze.address)
+    nft.setOnlyGovernor(deepfreeze.address)
+    return weth, freth, nft, frz, deepfreeze
