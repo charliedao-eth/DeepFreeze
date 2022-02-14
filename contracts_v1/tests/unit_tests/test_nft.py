@@ -1,6 +1,7 @@
 from brownie import accounts, exceptions, chain
 from scripts.deploy_functions import deploy_contracts, deployAndSetAdmin
 from scripts.utils import calculateWithdrawCost
+import brownie
 
 from web3 import Web3
 import pytest
@@ -36,3 +37,14 @@ def test_NotBurn(admin, alice):
     deepfreeze.lockWETH(amountToLock, 500, {"from": alice})
     with pytest.raises(exceptions.VirtualMachineError):
         nft.burn(1, {"from": alice})
+
+
+# Test ownership of token
+def test_Ownership(admin, alice, bob):
+    weth, freth, nft, frz, deepfreeze = deployAndSetAdmin(admin)
+    amountToLock = Web3.toWei(1, "Ether")
+    weth.deposit({"from": alice, "value": amountToLock})
+    weth.approve(deepfreeze.address, amountToLock, {"from": alice})
+    deepfreeze.lockWETH(amountToLock, 500, {"from": alice})
+    assert nft.ownerOf(1) == alice
+    assert nft.ownerOf(1) != bob

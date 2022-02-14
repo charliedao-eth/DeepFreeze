@@ -60,9 +60,9 @@ contract FreezerGovernor is Ownable {
         uint256 frPenalty
     );
 
-    IfrETH private frETH;
-    IERC20 private wETH;
-    INFT private nftPosition;
+    IfrETH private immutable frETH;
+    IERC20 private immutable wETH;
+    INFT private immutable nftPosition;
 
     constructor(
         address _WETHaddress,
@@ -118,7 +118,6 @@ contract FreezerGovernor is Ownable {
         _nextId += 1;
     }
 
-    // add all the nonreant safety
     function withdrawWETH(uint256 _tokenId) public {
         require(
             msg.sender == nftPosition.ownerOf(_tokenId),

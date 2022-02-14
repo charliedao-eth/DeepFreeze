@@ -6,11 +6,6 @@ from web3 import Web3
 import pytest
 
 
-def sendEth(alice):
-    accounts[2].transfer(alice, Web3.toWei(9.5, "Ether"))
-    accounts[3].transfer(alice, Web3.toWei(9.5, "Ether"))
-
-
 # Test locking and minting of frETH and NFT
 @pytest.mark.parametrize("amountToLock", [1, 4, 5])
 @pytest.mark.parametrize("timeToLock", [30, 89, 365, 730, 1095])
@@ -29,6 +24,17 @@ def test_deposit(admin, alice, amountToLock, timeToLock):
     assert nft.balanceOf(alice) == 1
     assert nft.ownerOf(1) == alice
     assert weth.balanceOf(deepfreeze.address) == amountToLock
+
+
+# Test locking and minting of frETH and NFT
+@pytest.mark.parametrize("timeToLock", [1, 3, 1300, 1101])
+def test_notLockingPeriod(admin, alice, timeToLock):
+    weth, freth, nft, frz, deepfreeze = deployAndSetAdmin(admin)
+    amountToLock = Web3.toWei(0.001, "Ether")
+    weth.deposit({"from": alice, "value": amountToLock})
+    weth.approve(deepfreeze.address, amountToLock, {"from": alice})
+    with pytest.raises(exceptions.VirtualMachineError):
+        deepfreeze.lockWETH(amountToLock, timeToLock, {"from": alice})
 
 
 # Test position is correct
