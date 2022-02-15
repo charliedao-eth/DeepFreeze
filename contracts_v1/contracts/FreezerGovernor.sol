@@ -24,11 +24,15 @@ interface INFT {
     function ownerOf(uint256) external returns (address);
 }
 
+interface IStaking {
+    function notifyRewardAmount(address, uint256) external;
+}
+
 contract FreezerGovernor is Ownable {
     uint256 internal constant N_DAYS = 365;
     uint256 internal constant MIN_LOCK_DAYS = 7;
     uint256 internal constant MAX_LOCK_DAYS = 1100;
-    address internal immutable FRZcontract;
+    uint256 internal constant MAX_UINT = 2**256 - 1;
 
     /// @dev The token ID position data
     mapping(uint256 => Position) private _positions;
@@ -63,21 +67,24 @@ contract FreezerGovernor is Ownable {
     IfrETH private immutable frETH;
     IERC20 private immutable wETH;
     INFT private immutable nftPosition;
+    IStaking private immutable stakingContract;
 
     constructor(
         address _WETHaddress,
         address _frETH,
         address _NFTPosition,
-        address _FRZcontract
+        address _stakingAddress
     ) {
         wETH = IERC20(_WETHaddress);
         frETH = IfrETH(_frETH);
         nftPosition = INFT(_NFTPosition);
-        FRZcontract = _FRZcontract;
+        stakingContract = IStaking(_stakingAddress);
+        wETH.approve(_stakingAddress, MAX_UINT);
+        frETH.approve(_stakingAddress, MAX_UINT);
     }
 
     // function lock Amount Duration onlyWeth
-    function lockWETH(uint256 _amount, uint256 _lockDuration) public {
+    function lockWETH(uint256 _amount, uint256 _lockDuration) external {
         require(_amount > 0, "Amount must be more than 0");
         require(
             _lockDuration >= MIN_LOCK_DAYS && _lockDuration <= MAX_LOCK_DAYS,
@@ -118,7 +125,7 @@ contract FreezerGovernor is Ownable {
         _nextId += 1;
     }
 
-    function withdrawWETH(uint256 _tokenId) public {
+    function withdrawWETH(uint256 _tokenId) external {
         require(
             msg.sender == nftPosition.ownerOf(_tokenId),
             "Not the owner of tokenId"
@@ -149,8 +156,7 @@ contract FreezerGovernor is Ownable {
             uint256 sendToUser = amountLocked - feesToPay;
             wETH.approve(msg.sender, sendToUser);
             wETH.transfer(msg.sender, sendToUser);
-            wETH.approve(FRZcontract, feesToPay);
-            wETH.transfer(FRZcontract, feesToPay);
+            stakingContract.notifyRewardAmount(address(wETH), feesToPay);
 
             uint256 frPenalty = getUnlockCost(_tokenId);
             frETH.transferFrom(msg.sender, address(this), frPenalty);
@@ -161,8 +167,7 @@ contract FreezerGovernor is Ownable {
                     frPenalty
                 );
                 frETH.burn(address(this), toBurn);
-                frETH.approve(FRZcontract, toSend);
-                frETH.transfer(FRZcontract, toSend);
+                stakingContract.notifyRewardAmount(address(frETH), toSend);
             } else {
                 frETH.burn(address(this), frPenalty);
             }
