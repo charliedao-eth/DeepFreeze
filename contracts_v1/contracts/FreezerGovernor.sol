@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 interface IfrETH is IERC20 {
     function mint(address, uint256) external;
@@ -28,7 +29,7 @@ interface IStaking {
     function notifyRewardAmount(address, uint256) external;
 }
 
-contract FreezerGovernor is Ownable {
+contract FreezerGovernor is Ownable, ReentrancyGuard {
     uint256 internal constant N_DAYS = 365;
     uint256 internal constant MIN_LOCK_DAYS = 7;
     uint256 internal constant MAX_LOCK_DAYS = 1100;
@@ -84,7 +85,10 @@ contract FreezerGovernor is Ownable {
     }
 
     // function lock Amount Duration onlyWeth
-    function lockWETH(uint256 _amount, uint256 _lockDuration) external {
+    function lockWETH(uint256 _amount, uint256 _lockDuration)
+        external
+        nonReentrant
+    {
         require(_amount > 0, "Amount must be more than 0");
         require(
             _lockDuration >= MIN_LOCK_DAYS && _lockDuration <= MAX_LOCK_DAYS,
@@ -125,7 +129,7 @@ contract FreezerGovernor is Ownable {
         _nextId += 1;
     }
 
-    function withdrawWETH(uint256 _tokenId) external {
+    function withdrawWETH(uint256 _tokenId) external nonReentrant {
         require(
             msg.sender == nftPosition.ownerOf(_tokenId),
             "Not the owner of tokenId"

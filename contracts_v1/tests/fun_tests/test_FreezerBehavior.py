@@ -1,5 +1,5 @@
 from brownie import accounts, exceptions, chain
-from scripts.deploy_functions import deploy_contracts, deployAndSetAdmin
+from scripts.deploy_functions import deploy_contracts, deployAndParametrize
 from scripts.utils import calculateWithdrawCost
 import brownie
 
@@ -9,7 +9,7 @@ import pytest
 # Test when withdraw after maturity
 @pytest.mark.parametrize("amountToLock", [0.001, 0.231, 0.321, 1.293])
 def test_fullProcess(admin, alice, amountToLock):
-    weth, freth, nft, frz, deepfreeze = deployAndSetAdmin(admin)
+    weth, freth, nft, staking, frz, deepfreeze = deployAndParametrize(admin)
     amountToLock = Web3.toWei(amountToLock, "Ether")
     weth.deposit({"from": alice, "value": amountToLock})
     weth.approve(deepfreeze.address, amountToLock, {"from": alice})
@@ -31,7 +31,7 @@ def test_fullProcess(admin, alice, amountToLock):
 
 # Test lock send to bob and bob withdraw
 def test_SendNFT(admin, alice, bob):
-    weth, freth, nft, frz, deepfreeze = deployAndSetAdmin(admin)
+    weth, freth, nft, staking, frz, deepfreeze = deployAndParametrize(admin)
     amountToLock = Web3.toWei(0.01, "Ether")
     weth.deposit({"from": alice, "value": amountToLock})
     weth.approve(deepfreeze.address, amountToLock, {"from": alice})
@@ -54,7 +54,7 @@ def test_SendNFT(admin, alice, bob):
 
 # Test malicious user reedem
 def test_reedem(admin, alice, bob):
-    weth, freth, nft, frz, deepfreeze = deployAndSetAdmin(admin)
+    weth, freth, nft, staking, frz, deepfreeze = deployAndParametrize(admin)
     amountToLock = Web3.toWei(0.01, "Ether")
     weth.deposit({"from": alice, "value": amountToLock})
     weth.approve(deepfreeze.address, amountToLock, {"from": alice})

@@ -2,7 +2,6 @@ from brownie import (
     FreezerGovernor,
     frETH,
     MockWETH,
-    accounts,
     NFTPosition,
     FRZtoken,
     MultiRewards,
@@ -26,7 +25,8 @@ def deploy_NFTPosition(admin):
 
 
 def deploy_FRZtoken(admin):
-    frz = FRZtoken.deploy(1000000000 * 10 ** 18, {"from": admin})
+    FRZ_SUPPLY = Web3.toWei(1000000000, "Ether")
+    frz = FRZtoken.deploy(FRZ_SUPPLY, {"from": admin})
     return frz
 
 
@@ -35,7 +35,7 @@ def deploy_stakingContract(admin, frz):
     return staking
 
 
-def deploy_DeepFreeze(admin, weth, freth, nftPosition, frz, staking):
+def deploy_DeepFreeze(admin, weth, freth, nftPosition, staking):
     deepfreeze = FreezerGovernor.deploy(
         weth, freth, nftPosition, staking, {"from": admin}
     )
@@ -48,12 +48,23 @@ def deploy_contracts(admin):
     nft = deploy_NFTPosition(admin)
     frz = deploy_FRZtoken(admin)
     staking = deploy_stakingContract(admin, frz)
-    deepfreeze = deploy_DeepFreeze(admin, weth, freth, nft, frz, staking)
-    return weth, freth, nft, staking, deepfreeze
+    deepfreeze = deploy_DeepFreeze(admin, weth, freth, nft, staking)
+    return weth, freth, nft, staking, frz, deepfreeze
 
 
-def deployAndSetAdmin(admin):
-    (weth, freth, nft, frz, staking, deepfreeze) = deploy_contracts(admin)
-    freth.setOnlyGovernor(deepfreeze.address)
-    nft.setOnlyGovernor(deepfreeze.address)
-    return weth, freth, nft, staking, deepfreeze
+def setGovernor(admin, freth, nft, deepfreeze):
+    freth.setOnlyGovernor(deepfreeze.address, {"from": admin})
+    nft.setOnlyGovernor(deepfreeze.address, {"from": admin})
+
+
+def setStakingReward(admin, staking, deepfreeze, freth, weth):
+    DISTRIB_OVER = 7 * 24 * 3600
+    staking.addReward(weth, deepfreeze, DISTRIB_OVER, {"from": admin})
+    staking.addReward(freth, deepfreeze, DISTRIB_OVER, {"from": admin})
+
+
+def deployAndParametrize(admin):
+    (weth, freth, nft, staking, frz, deepfreeze) = deploy_contracts(admin)
+    setGovernor(admin, freth, nft, deepfreeze)
+    setStakingReward(admin, staking, deepfreeze, freth, weth)
+    return weth, freth, nft, staking, frz, deepfreeze
