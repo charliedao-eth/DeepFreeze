@@ -2,7 +2,7 @@ from brownie import (
     FreezerGovernor,
     frETH,
     MockWETH,
-    NFTPosition,
+    NonFungiblePositionManager,
     FRZtoken,
     MultiRewards,
 )
@@ -20,7 +20,7 @@ def deploy_frETH(admin):
 
 
 def deploy_NFTPosition(admin):
-    nftPosition = NFTPosition.deploy({"from": admin})
+    nftPosition = NonFungiblePositionManager.deploy({"from": admin})
     return nftPosition
 
 

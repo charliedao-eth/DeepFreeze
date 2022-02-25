@@ -12,13 +12,7 @@ interface IfrETH is IERC20 {
 }
 
 interface INFT {
-    function mint(
-        address,
-        uint256,
-        uint256,
-        uint256,
-        uint256
-    ) external;
+    function mint(address, uint256) external;
 
     function burn(uint256) external;
 
@@ -110,13 +104,7 @@ contract FreezerGovernor is Ownable, ReentrancyGuard {
             _nextId
         );
         _mintToken(tokenToMint);
-        nftPosition.mint(
-            msg.sender,
-            _nextId,
-            _amount,
-            lockingDate,
-            maturityDate
-        );
+        nftPosition.mint(msg.sender, _nextId);
 
         emit lockedWETH(
             msg.sender,
