@@ -16,7 +16,7 @@ interface INFT {
 
     function burn(uint256) external;
 
-    function ownerOf(uint256) external returns (address);
+    function ownerOf(uint256) external view returns (address);
 }
 
 interface IStaking {
