@@ -4,26 +4,15 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "../interfaces/IfrToken.sol";
+import "../interfaces/IMultiRewards.sol";
+import "../interfaces/INonFungiblePositionManager.sol";
 
-interface IfrETH is IERC20 {
-    function mint(address, uint256) external;
+/// @title TrueFreezeGover contract
+/// @author chalex.eth - CharlieDAO
+/// @notice Main TrueFreeze contract
 
-    function burn(address, uint256) external;
-}
-
-interface INFT {
-    function mint(address, uint256) external;
-
-    function burn(uint256) external;
-
-    function ownerOf(uint256) external view returns (address);
-}
-
-interface IStaking {
-    function notifyRewardAmount(address, uint256) external;
-}
-
-contract FreezerGovernor is Ownable, ReentrancyGuard {
+contract TrueFreezeGovernor is Ownable, ReentrancyGuard {
     uint256 internal constant N_DAYS = 365;
     uint256 internal constant MIN_LOCK_DAYS = 7;
     uint256 internal constant MAX_LOCK_DAYS = 1100;
@@ -43,43 +32,46 @@ contract FreezerGovernor is Ownable, ReentrancyGuard {
         bool active;
     }
 
-    event lockedWETH(
+    event lockedWAsset(
         address indexed minter,
         uint256 tokenId,
-        uint256 amounntLocked,
+        uint256 amountLocked,
         uint256 lockingDate,
         uint256 maturityDate
     );
 
-    event withdrawedWETH(
+    event withdrawedWAsset(
         address indexed withdrawer,
         uint256 tokenId,
         uint256 amountWithdrawed,
-        uint256 WethPenalty,
+        uint256 WAssetPenalty,
         uint256 frPenalty
     );
 
-    IfrETH private immutable frETH;
-    IERC20 private immutable wETH;
-    INFT private immutable nftPosition;
-    IStaking private immutable stakingContract;
+    IfrToken private immutable frToken;
+    IERC20 private immutable wAsset;
+    INonFungiblePositionManager private immutable nftPosition;
+    IMultiRewards private immutable stakingContract;
+
+    /* ----------- Constructor --------------*/
 
     constructor(
-        address _WETHaddress,
-        address _frETH,
+        address _wAssetaddress,
+        address _frToken,
         address _NFTPosition,
         address _stakingAddress
     ) {
-        wETH = IERC20(_WETHaddress);
-        frETH = IfrETH(_frETH);
-        nftPosition = INFT(_NFTPosition);
-        stakingContract = IStaking(_stakingAddress);
-        wETH.approve(_stakingAddress, MAX_UINT);
-        frETH.approve(_stakingAddress, MAX_UINT);
+        wAsset = IERC20(_wAssetaddress);
+        frToken = IfrToken(_frToken);
+        nftPosition = INonFungiblePositionManager(_NFTPosition);
+        stakingContract = IMultiRewards(_stakingAddress);
+        wAsset.approve(_stakingAddress, MAX_UINT);
+        frToken.approve(_stakingAddress, MAX_UINT);
     }
 
-    // function lock Amount Duration onlyWeth
-    function lockWETH(uint256 _amount, uint256 _lockDuration)
+    /* ----------- External functions --------------*/
+
+    function lockWAsset(uint256 _amount, uint256 _lockDuration)
         external
         nonReentrant
     {
@@ -88,8 +80,8 @@ contract FreezerGovernor is Ownable, ReentrancyGuard {
             _lockDuration >= MIN_LOCK_DAYS && _lockDuration <= MAX_LOCK_DAYS,
             "Bad days input"
         );
-        bool sent = wETH.transferFrom(msg.sender, address(this), _amount);
-        require(sent, "Error in sending WETH");
+        bool sent = wAsset.transferFrom(msg.sender, address(this), _amount);
+        require(sent, "Error in sending WAsset");
         uint256 lockingDate = block.timestamp;
         uint256 maturityDate = lockingDate + (_lockDuration * 1 days);
         uint256 tokenToMint = _calculate_frToken(
@@ -106,7 +98,7 @@ contract FreezerGovernor is Ownable, ReentrancyGuard {
         _mintToken(tokenToMint);
         nftPosition.mint(msg.sender, _nextId);
 
-        emit lockedWETH(
+        emit lockedWAsset(
             msg.sender,
             _nextId,
             _amount,
@@ -117,7 +109,7 @@ contract FreezerGovernor is Ownable, ReentrancyGuard {
         _nextId += 1;
     }
 
-    function withdrawWETH(uint256 _tokenId) external nonReentrant {
+    function withdrawWAsset(uint256 _tokenId) external nonReentrant {
         require(
             msg.sender == nftPosition.ownerOf(_tokenId),
             "Not the owner of tokenId"
@@ -134,36 +126,36 @@ contract FreezerGovernor is Ownable, ReentrancyGuard {
             uint256 maturityDate,
             bool active
         ) = getPositions(_tokenId);
-        uint256 feesToPay = getWethFees(_tokenId);
+        uint256 feesToPay = getWAssetFees(_tokenId);
         _positions[_tokenId].active = false;
         _positions[_tokenId].amountLocked = 0;
 
         nftPosition.burn(_tokenId);
         uint256 progress = getProgress(_tokenId);
         if (progress >= 100) {
-            wETH.approve(msg.sender, amountLocked);
-            wETH.transfer(msg.sender, amountLocked);
-            emit withdrawedWETH(msg.sender, _tokenId, amountLocked, 0, 0);
+            wAsset.approve(msg.sender, amountLocked);
+            wAsset.transfer(msg.sender, amountLocked);
+            emit withdrawedWAsset(msg.sender, _tokenId, amountLocked, 0, 0);
         } else if (progress < 100) {
             uint256 sendToUser = amountLocked - feesToPay;
-            wETH.approve(msg.sender, sendToUser);
-            wETH.transfer(msg.sender, sendToUser);
-            stakingContract.notifyRewardAmount(address(wETH), feesToPay);
+            wAsset.approve(msg.sender, sendToUser);
+            wAsset.transfer(msg.sender, sendToUser);
+            stakingContract.notifyRewardAmount(address(wAsset), feesToPay);
 
             uint256 frPenalty = getUnlockCost(_tokenId);
-            frETH.transferFrom(msg.sender, address(this), frPenalty);
+            frToken.transferFrom(msg.sender, address(this), frPenalty);
 
             if (progress <= 67) {
                 (uint256 toSend, uint256 toBurn) = _calculateBurnAndSend(
                     tokenMinted,
                     frPenalty
                 );
-                frETH.burn(address(this), toBurn);
-                stakingContract.notifyRewardAmount(address(frETH), toSend);
+                frToken.burn(address(this), toBurn);
+                stakingContract.notifyRewardAmount(address(frToken), toSend);
             } else {
-                frETH.burn(address(this), frPenalty);
+                frToken.burn(address(this), frPenalty);
             }
-            emit withdrawedWETH(
+            emit withdrawedWAsset(
                 msg.sender,
                 _tokenId,
                 amountLocked,
@@ -173,7 +165,7 @@ contract FreezerGovernor is Ownable, ReentrancyGuard {
         }
     }
 
-    // Internal functions
+    /* ----------- Internal functions --------------*/
 
     function _createPosition(
         uint256 _amount,
@@ -192,10 +184,10 @@ contract FreezerGovernor is Ownable, ReentrancyGuard {
     }
 
     function _mintToken(uint256 _tokenToMint) private {
-        frETH.mint(msg.sender, _tokenToMint);
+        frToken.mint(msg.sender, _tokenToMint);
     }
 
-    // View functions
+    /* ----------- View functions --------------*/
 
     function getPositions(uint256 tokenId)
         public
@@ -230,17 +222,17 @@ contract FreezerGovernor is Ownable, ReentrancyGuard {
         return _calculateWithdrawCost(_progress, _TokenMinted);
     }
 
-    function getWethFees(uint256 _tokenId) public view returns (uint256) {
+    function getWAssetFees(uint256 _tokenId) public view returns (uint256) {
         (uint256 amountLocked, , , , ) = getPositions(_tokenId);
         uint256 progress = getProgress(_tokenId);
         if (progress >= 100) {
             return 0;
         } else {
-            return _calculateWethFees(amountLocked);
+            return _calculateWAssetFees(amountLocked);
         }
     }
 
-    // Pure functions
+    /* ----------- Pure functions --------------*/
 
     /// @notice Get the amount of frAsset that will be minted
     /// @return Return the amount of frAsset that will be minted
@@ -281,7 +273,7 @@ contract FreezerGovernor is Ownable, ReentrancyGuard {
         return unlockCost;
     }
 
-    function _calculateWethFees(uint256 _lockedAmount)
+    function _calculateWAssetFees(uint256 _lockedAmount)
         internal
         pure
         returns (uint256)

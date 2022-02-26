@@ -5,35 +5,29 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./libraries/NFTDescriptor.sol";
 import "./libraries/utils.sol";
+import "../interfaces/ITrueFreezeGovernor.sol";
 
-interface IGovernor {
-    function getPositions(uint256)
-        external
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256,
-            uint256,
-            bool
-        );
-}
+/// @title NonFungiblePositionManager contract
+/// @author chalex.eth - CharlieDAO
+/// @notice Represent position as a NFT
 
 contract NonFungiblePositionManager is ERC721, Ownable {
     address public governorAddress;
-    IGovernor private IGov;
+
+    /* ------------------ Constructor --------------*/
 
     constructor() ERC721("TrueFreeze NFT positions", "TrueFreeze") {}
 
-    // Modifier
+    /* ------------------ Modifier --------------*/
     modifier onlyGovernor() {
         require(msg.sender == governorAddress, "Only Factory can call");
         _;
     }
 
+    /* ----------- External functions --------------*/
+
     function setOnlyGovernor(address _governorAddress) external onlyOwner {
         governorAddress = _governorAddress;
-        IGov = IGovernor(_governorAddress);
     }
 
     function mint(address _to, uint256 _tokenId) external onlyGovernor {
@@ -43,6 +37,8 @@ contract NonFungiblePositionManager is ERC721, Ownable {
     function burn(uint256 _tokenId) external onlyGovernor {
         _burn(_tokenId);
     }
+
+    /* ----------- View functions --------------*/
 
     function tokenURI(uint256 tokenId)
         public
@@ -57,7 +53,7 @@ contract NonFungiblePositionManager is ERC721, Ownable {
             uint256 _lockingDate,
             uint256 _maturityDate,
 
-        ) = IGov.getPositions(tokenId);
+        ) = ITrueFreezeGovernor(governorAddress).getPositions(tokenId);
 
         return
             NFTDescriptor._constructTokenURI(
@@ -66,6 +62,4 @@ contract NonFungiblePositionManager is ERC721, Ownable {
                 _maturityDate
             );
     }
-
-    // Internal
 }

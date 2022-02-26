@@ -1,6 +1,6 @@
 from brownie import (
-    FreezerGovernor,
-    frETH,
+    TrueFreezeGovernor,
+    frToken,
     MockWETH,
     NonFungiblePositionManager,
     FRZtoken,
@@ -8,15 +8,18 @@ from brownie import (
 )
 from web3 import Web3
 
+NAME = "frETH"
+SYMBOL = "frETH"
+
 
 def deploy_wETH(admin):
     weth = MockWETH.deploy({"from": admin})
     return weth
 
 
-def deploy_frETH(admin):
-    freth = frETH.deploy({"from": admin})
-    return freth
+def deploy_frToken(admin):
+    frtoken = frToken.deploy(NAME, SYMBOL, {"from": admin})
+    return frtoken
 
 
 def deploy_NFTPosition(admin):
@@ -35,36 +38,36 @@ def deploy_stakingContract(admin, frz):
     return staking
 
 
-def deploy_DeepFreeze(admin, weth, freth, nftPosition, staking):
-    deepfreeze = FreezerGovernor.deploy(
-        weth, freth, nftPosition, staking, {"from": admin}
+def deploy_freeze(admin, weth, frtoken, nftPosition, staking):
+    freeze = TrueFreezeGovernor.deploy(
+        weth, frtoken, nftPosition, staking, {"from": admin}
     )
-    return deepfreeze
+    return freeze
 
 
 def deploy_contracts(admin):
     weth = deploy_wETH(admin)
-    freth = deploy_frETH(admin)
+    frtoken = deploy_frToken(admin)
     nft = deploy_NFTPosition(admin)
     frz = deploy_FRZtoken(admin)
     staking = deploy_stakingContract(admin, frz)
-    deepfreeze = deploy_DeepFreeze(admin, weth, freth, nft, staking)
-    return weth, freth, nft, staking, frz, deepfreeze
+    freeze = deploy_freeze(admin, weth, frtoken, nft, staking)
+    return weth, frtoken, nft, staking, frz, freeze
 
 
-def setGovernor(admin, freth, nft, deepfreeze):
-    freth.setOnlyGovernor(deepfreeze.address, {"from": admin})
-    nft.setOnlyGovernor(deepfreeze.address, {"from": admin})
+def setGovernor(admin, frtoken, nft, freeze):
+    frtoken.setOnlyGovernor(freeze.address, {"from": admin})
+    nft.setOnlyGovernor(freeze.address, {"from": admin})
 
 
-def setStakingReward(admin, staking, deepfreeze, freth, weth):
+def setStakingReward(admin, staking, freeze, frtoken, weth):
     DISTRIB_OVER = 7 * 24 * 3600
-    staking.addReward(weth, deepfreeze, DISTRIB_OVER, {"from": admin})
-    staking.addReward(freth, deepfreeze, DISTRIB_OVER, {"from": admin})
+    staking.addReward(weth, freeze, DISTRIB_OVER, {"from": admin})
+    staking.addReward(frtoken, freeze, DISTRIB_OVER, {"from": admin})
 
 
 def deployAndParametrize(admin):
-    (weth, freth, nft, staking, frz, deepfreeze) = deploy_contracts(admin)
-    setGovernor(admin, freth, nft, deepfreeze)
-    setStakingReward(admin, staking, deepfreeze, freth, weth)
-    return weth, freth, nft, staking, frz, deepfreeze
+    (weth, frtoken, nft, staking, frz, freeze) = deploy_contracts(admin)
+    setGovernor(admin, frtoken, nft, freeze)
+    setStakingReward(admin, staking, freeze, frtoken, weth)
+    return weth, frtoken, nft, staking, frz, freeze
