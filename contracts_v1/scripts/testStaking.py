@@ -14,7 +14,7 @@ staking.stake(100000, {"from": admin})
 
 weth.deposit({"from": user, "value": value})
 weth.approve(deepfreeze.address, value, {"from": user})
-tx = deepfreeze.lockWETH(value, 365, {"from": user})
+tx = deepfreeze.lockWAsset(value, 365, {"from": user})
 
 
 chain.sleep(3600 * 24 * 300)

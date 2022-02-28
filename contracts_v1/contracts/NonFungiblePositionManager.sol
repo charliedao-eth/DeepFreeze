@@ -13,6 +13,7 @@ import "../interfaces/ITrueFreezeGovernor.sol";
 
 contract NonFungiblePositionManager is ERC721, Ownable {
     address public governorAddress;
+    bool private isInitialized;
 
     /* ------------------ Constructor --------------*/
 
@@ -27,7 +28,9 @@ contract NonFungiblePositionManager is ERC721, Ownable {
     /* ----------- External functions --------------*/
 
     function setOnlyGovernor(address _governorAddress) external onlyOwner {
+        require(isInitialized == false, "Governor already set");
         governorAddress = _governorAddress;
+        isInitialized = true;
     }
 
     function mint(address _to, uint256 _tokenId) external onlyGovernor {

@@ -11,13 +11,16 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract frToken is ERC20, ERC20Burnable, Ownable {
     address public governorAddress;
+    bool private isInitialized;
 
     /* ------------------ Constructor --------------*/
 
     constructor(string memory name, string memory symbol)
         public
         ERC20(name, symbol)
-    {}
+    {
+        isInitialized = false;
+    }
 
     /* ------------------ Modifier --------------*/
 
@@ -31,7 +34,9 @@ contract frToken is ERC20, ERC20Burnable, Ownable {
     /// @notice set the TrueFreezeGovernor address
     /// @param _governorAddress address of the TrueFreezeGovernor contract
     function setOnlyGovernor(address _governorAddress) external onlyOwner {
+        require(isInitialized == false, "Governor already set");
         governorAddress = _governorAddress;
+        isInitialized = true;
     }
 
     /// @notice mint token when wAsset are locked in TrueFreezeGovernor

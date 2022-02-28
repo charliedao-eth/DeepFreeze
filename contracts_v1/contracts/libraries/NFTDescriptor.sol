@@ -6,7 +6,9 @@ import "./utils.sol";
 
 library NFTDescriptor {
     struct paramsTokenURI {
-        uint256 amountLocked;
+        string n1;
+        string n2;
+        string n3;
         string y1;
         string m1;
         string d1;
@@ -52,6 +54,9 @@ library NFTDescriptor {
         uint256 _lockingDate,
         uint256 _maturityDate // here maybe get the tokenID that will query ?
     ) internal pure returns (paramsTokenURI memory) {
+        (uint256 n1, uint256 n2, uint256 n3) = Utils.getIntAndDigit(
+            _amountLocked
+        );
         (uint256 y1, uint256 m1, uint256 d1) = Utils.timestampToDate(
             _lockingDate
         );
@@ -60,7 +65,9 @@ library NFTDescriptor {
         );
         return
             paramsTokenURI({
-                amountLocked: _amountLocked,
+                n1: Utils.uint2str(n1),
+                n2: Utils.uint2str(n2),
+                n3: Utils.uint2str(n3),
                 y1: Utils.uint2str(y1),
                 m1: Utils.uint2str(m1),
                 d1: Utils.uint2str(d1),
@@ -81,10 +88,10 @@ library NFTDescriptor {
                     '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 400 500">',
                     generateStyle(),
                     generateLinearGradient(),
-                    generateAmountLocked(),
+                    generateAmountLocked(_params),
                     generateMiddle(),
-                    generateMaturity(),
-                    generateLocking(),
+                    generateMaturity(_params),
+                    generateLocking(_params),
                     generateBottom()
                 )
             );
@@ -126,12 +133,21 @@ library NFTDescriptor {
             );
     }
 
-    function generateAmountLocked() internal pure returns (string memory svg) {
+    function generateAmountLocked(paramsTokenURI memory _params)
+        internal
+        pure
+        returns (string memory svg)
+    {
         return
             string(
                 abi.encodePacked(
                     '<rect class="gradient-border" x="50" y="10" width="300" height="100" rx="20" transform="translate(0,0)"/>',
-                    '<text text-anchor="end" class="amount-text" x="345" y="70"> 10 </text>',
+                    '<text text-anchor="end" class="amount-text" x="345" y="70">',
+                    _params.n1,
+                    ".",
+                    _params.n2,
+                    _params.n3,
+                    "</text>",
                     '<text text-anchor="middle" class="date-label" x="200" y="100">',
                     "WETH</text>    </g>"
                 )
@@ -149,25 +165,41 @@ library NFTDescriptor {
             );
     }
 
-    function generateMaturity() internal pure returns (string memory svg) {
+    function generateMaturity(paramsTokenURI memory _params)
+        internal
+        pure
+        returns (string memory svg)
+    {
         return
             string(
                 abi.encodePacked(
                     '<text text-anchor="middle" class="date-text" x="200" y="165">',
-                    "2024-01-20",
+                    _params.y1,
+                    "-",
+                    _params.m1,
+                    "-",
+                    _params.d1,
                     '</text>      <text text-anchor="middle" class="date-label" x="200" y="200">',
                     "Maturity Date</text>"
                 )
             );
     }
 
-    function generateLocking() internal pure returns (string memory svg) {
+    function generateLocking(paramsTokenURI memory _params)
+        internal
+        pure
+        returns (string memory svg)
+    {
         return
             string(
                 abi.encodePacked(
                     '<rect class="gradient-border" x="75" y="220" width="250" height="90" rx="20" transform="translate(0,0)"/>',
                     '<text text-anchor="middle" class="date-text" x="200" y="265">',
-                    "2022-01-20",
+                    _params.y2,
+                    "-",
+                    _params.m2,
+                    "-",
+                    _params.d2,
                     '</text>      <text text-anchor="middle" class="date-label" x="200" y="300">',
                     "Lock Date </text>    </g>  </g>"
                 )

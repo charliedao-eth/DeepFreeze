@@ -8,7 +8,7 @@ import "../interfaces/IfrToken.sol";
 import "../interfaces/IMultiRewards.sol";
 import "../interfaces/INonFungiblePositionManager.sol";
 
-/// @title TrueFreezeGover contract
+/// @title TrueFreezeGovernor contract
 /// @author chalex.eth - CharlieDAO
 /// @notice Main TrueFreeze contract
 

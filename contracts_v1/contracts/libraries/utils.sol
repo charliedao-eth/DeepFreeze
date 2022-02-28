@@ -2,6 +2,21 @@
 pragma solidity ^0.8.0;
 
 library Utils {
+    function getIntAndDigit(uint256 _number)
+        internal
+        pure
+        returns (
+            uint256,
+            uint256,
+            uint256
+        )
+    {
+        uint256 n1 = _number / (10**18);
+        uint256 n2 = (_number - n1 * 10**18) / (10**17);
+        uint256 n3 = (_number - n1 * 10**18 - n2 * 10**17) / (10**16);
+        return (n1, n2, n3);
+    }
+
     function _daysToDate(uint256 _days)
         private
         pure
