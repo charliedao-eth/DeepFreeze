@@ -4,6 +4,10 @@ pragma solidity ^0.8.0;
 import "./base64.sol";
 import "./utils.sol";
 
+/// @title NFTDescriptor
+/// @author chalex.eth - CharlieDAO
+/// @notice Library for rendering the NFT by returning a SVG code associated to a locked position in TrueFreezeGovernor
+
 library NFTDescriptor {
     struct paramsTokenURI {
         string n1;
@@ -17,6 +21,7 @@ library NFTDescriptor {
         string d2;
     }
 
+    /// @dev main function for constructing the tokenURI
     function _constructTokenURI(
         uint256 _amountLocked,
         uint256 _lockingDate,

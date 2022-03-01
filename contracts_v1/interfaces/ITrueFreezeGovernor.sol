@@ -12,4 +12,6 @@ interface ITrueFreezeGovernor {
             uint256,
             bool
         );
+
+    function getTokenSymbol() external view returns (string memory);
 }

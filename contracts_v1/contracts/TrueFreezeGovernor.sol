@@ -5,6 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "../interfaces/IfrToken.sol";
+import "../interfaces/IwAsset.sol";
 import "../interfaces/IMultiRewards.sol";
 import "../interfaces/INonFungiblePositionManager.sol";
 
@@ -24,6 +25,7 @@ contract TrueFreezeGovernor is Ownable, ReentrancyGuard {
     /// @dev The ID of the next token that will be minted. Skips 0
     uint256 private _nextId = 1;
 
+    ///@dev pack the parameters of the position in a struct
     struct Position {
         uint256 amountLocked;
         uint256 tokenMinted;
@@ -32,9 +34,11 @@ contract TrueFreezeGovernor is Ownable, ReentrancyGuard {
         bool active;
     }
 
+    /* ----------- events --------------*/
+
     event lockedWAsset(
         address indexed minter,
-        uint256 tokenId,
+        uint256 indexed tokenId,
         uint256 amountLocked,
         uint256 lockingDate,
         uint256 maturityDate
@@ -42,14 +46,16 @@ contract TrueFreezeGovernor is Ownable, ReentrancyGuard {
 
     event withdrawedWAsset(
         address indexed withdrawer,
-        uint256 tokenId,
+        uint256 indexed tokenId,
         uint256 amountWithdrawed,
         uint256 WAssetPenalty,
         uint256 frPenalty
     );
 
+    /* ----------- Interfaces --------------*/
+
     IfrToken private immutable frToken;
-    IERC20 private immutable wAsset;
+    IwAsset private immutable wAsset;
     INonFungiblePositionManager private immutable nftPosition;
     IMultiRewards private immutable stakingContract;
 
@@ -61,7 +67,7 @@ contract TrueFreezeGovernor is Ownable, ReentrancyGuard {
         address _NFTPosition,
         address _stakingAddress
     ) {
-        wAsset = IERC20(_wAssetaddress);
+        wAsset = IwAsset(_wAssetaddress);
         frToken = IfrToken(_frToken);
         nftPosition = INonFungiblePositionManager(_NFTPosition);
         stakingContract = IMultiRewards(_stakingAddress);
@@ -71,6 +77,10 @@ contract TrueFreezeGovernor is Ownable, ReentrancyGuard {
 
     /* ----------- External functions --------------*/
 
+    /// @notice lock wAsset (WETH,WAVAX,WMATIC...) and create a position represented by a NFT
+    /// @dev locking create a position, reward by minting frToken and NFT associated to the position
+    /// @param _amount wAsset amount to lock
+    /// @param _lockDuration number of days to lock the wAsset
     function lockWAsset(uint256 _amount, uint256 _lockDuration)
         external
         nonReentrant
@@ -109,6 +119,9 @@ contract TrueFreezeGovernor is Ownable, ReentrancyGuard {
         _nextId += 1;
     }
 
+    /// @notice withdraw wAsset (WETH,WAVAX,WMATIC...) associated to the NFT position
+    /// @dev withdraw the position associated to the NFT position
+    /// @param _tokenId ID of the NFT token
     function withdrawWAsset(uint256 _tokenId) external nonReentrant {
         require(
             msg.sender == nftPosition.ownerOf(_tokenId),
@@ -133,10 +146,12 @@ contract TrueFreezeGovernor is Ownable, ReentrancyGuard {
         nftPosition.burn(_tokenId);
         uint256 progress = getProgress(_tokenId);
         if (progress >= 100) {
+            // if progress > 100 sending back asset
             wAsset.approve(msg.sender, amountLocked);
             wAsset.transfer(msg.sender, amountLocked);
             emit withdrawedWAsset(msg.sender, _tokenId, amountLocked, 0, 0);
         } else if (progress < 100) {
+            // if progress < 100 user need to pay a wAsset fee
             uint256 sendToUser = amountLocked - feesToPay;
             wAsset.approve(msg.sender, sendToUser);
             wAsset.transfer(msg.sender, sendToUser);
@@ -146,6 +161,7 @@ contract TrueFreezeGovernor is Ownable, ReentrancyGuard {
             frToken.transferFrom(msg.sender, address(this), frPenalty);
 
             if (progress <= 67) {
+                // if progress < 67 user need to pay a wAsset fee and frToken fee
                 (uint256 toSend, uint256 toBurn) = _calculateBurnAndSend(
                     tokenMinted,
                     frPenalty

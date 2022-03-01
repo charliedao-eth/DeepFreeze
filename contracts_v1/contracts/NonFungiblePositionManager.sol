@@ -27,22 +27,29 @@ contract NonFungiblePositionManager is ERC721, Ownable {
 
     /* ----------- External functions --------------*/
 
+    /// @notice set the TrueFreezeGovernor address
+    /// @param _governorAddress address of the TrueFreezeGovernor contract
     function setOnlyGovernor(address _governorAddress) external onlyOwner {
         require(isInitialized == false, "Governor already set");
         governorAddress = _governorAddress;
         isInitialized = true;
     }
 
+    /// @notice mint NFT when wAsset are locked in TrueFreezeGovernor
+    /// @dev mint is only perform by the TrueFreezeGovernor
     function mint(address _to, uint256 _tokenId) external onlyGovernor {
         _mint(_to, _tokenId);
     }
 
+    /// @notice burn NFT when wAsset are withdrawed early in TrueFreezeGovernor
+    /// @dev mint is only perform by the TrueFreezeGovernor
     function burn(uint256 _tokenId) external onlyGovernor {
         _burn(_tokenId);
     }
 
     /* ----------- View functions --------------*/
 
+    /// @dev return SVG code for rendering the NFT
     function tokenURI(uint256 tokenId)
         public
         view

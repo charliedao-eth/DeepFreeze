@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 /// @title FRZ token
 /// @author chalex.eth - CharlieDAO
 /// @notice FRZ token ERC20 contract
+
 contract FRZtoken is ERC20 {
     /* ------------------ Constructor --------------*/
 
