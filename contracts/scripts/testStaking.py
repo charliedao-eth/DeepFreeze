@@ -4,7 +4,7 @@ from web3 import Web3
 
 admin = accounts[0]
 user = accounts[1]
-value = Web3.toWei(1.29, "Ether")
+value = Web3.toWei(1, "Ether")
 
 weth, freth, nft, staking, frz, deepfreeze = deployAndParametrize(admin)
 
@@ -21,4 +21,6 @@ chain.sleep(3600 * 24 * 300)
 chain.mine()
 penalty = deepfreeze.getUnlockCost(1)
 freth.approve(deepfreeze, penalty, {"from": user})
-tx2 = deepfreeze.withdrawWAsset(1, {"from": user})
+tx2 = deepfreeze.withdrawWETH(1, {"from": user})
+
+# check how tokenURI evolve when withdraw

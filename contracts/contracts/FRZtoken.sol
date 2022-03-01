@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 contract FRZtoken is ERC20 {
     /* ------------------ Constructor --------------*/
 
-    constructor(uint256 _tokenSupply) public ERC20("FRZ", "FRZ") {
+    constructor(uint256 _tokenSupply) public ERC20("TrueFreeze", "FRZ") {
         _mint(msg.sender, _tokenSupply);
     }
 }

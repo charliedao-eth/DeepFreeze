@@ -183,6 +183,7 @@ contract TrueFreezeGovernor is Ownable, ReentrancyGuard {
 
     /* ----------- Internal functions --------------*/
 
+    ///@dev create a mapping of position struct
     function _createPosition(
         uint256 _amount,
         uint256 _tokenMinted,
@@ -205,6 +206,7 @@ contract TrueFreezeGovernor is Ownable, ReentrancyGuard {
 
     /* ----------- View functions --------------*/
 
+    ///@dev returns data for a given position
     function getPositions(uint256 tokenId)
         public
         view
@@ -225,6 +227,7 @@ contract TrueFreezeGovernor is Ownable, ReentrancyGuard {
         );
     }
 
+    ///@dev get the progress for a given position
     function getProgress(uint256 tokenId) public view returns (uint256) {
         (, , uint256 _lockingDate, uint256 _maturityDate, ) = getPositions(
             tokenId
@@ -232,12 +235,14 @@ contract TrueFreezeGovernor is Ownable, ReentrancyGuard {
         return _calculateProgress(block.timestamp, _lockingDate, _maturityDate);
     }
 
+    ///@dev get the frToken fee to pay for unlocking a position
     function getUnlockCost(uint256 _tokenId) public view returns (uint256) {
         uint256 _progress = getProgress(_tokenId);
         (, uint256 _TokenMinted, , , ) = getPositions(_tokenId);
         return _calculateWithdrawCost(_progress, _TokenMinted);
     }
 
+    ///@dev get the wAsset fee to pay if position is unlock
     function getWAssetFees(uint256 _tokenId) public view returns (uint256) {
         (uint256 amountLocked, , , , ) = getPositions(_tokenId);
         uint256 progress = getProgress(_tokenId);
@@ -297,6 +302,7 @@ contract TrueFreezeGovernor is Ownable, ReentrancyGuard {
         return (_lockedAmount * 25) / 10000;
     }
 
+    ///@dev calculate how much token is burnt and sent to staking contract
     function _calculateBurnAndSend(uint256 _tokenMinted, uint256 _penaltyPaid)
         internal
         pure
