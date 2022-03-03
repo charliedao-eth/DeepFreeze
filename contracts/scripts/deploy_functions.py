@@ -8,16 +8,13 @@ from brownie import (
 )
 from web3 import Web3
 
-NAME = "frETH"
-SYMBOL = "frETH"
-
 
 def deploy_wETH(admin):
     weth = MockWETH.deploy({"from": admin})
     return weth
 
 
-def deploy_frToken(admin):
+def deploy_frToken(admin, name, symbol):
     frtoken = frToken.deploy(NAME, SYMBOL, {"from": admin})
     return frtoken
 
@@ -47,7 +44,7 @@ def deploy_freeze(admin, weth, frtoken, nftPosition, staking):
 
 def deploy_contracts(admin):
     weth = deploy_wETH(admin)
-    frtoken = deploy_frToken(admin)
+    frtoken = deploy_frToken(admin, name, symbol)
     nft = deploy_NFTPosition(admin)
     frz = deploy_FRZtoken(admin)
     staking = deploy_stakingContract(admin, frz)
