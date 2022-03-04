@@ -23,7 +23,7 @@ brownie compile
 
 ## Running the Tests
 
-The [test suite](tests) contains common tests for all Curve pools, as well as unique per-pool tests. To run the entire suite:
+To run the entire suite:
 
 ```bash
 brownie test
