@@ -1,23 +1,22 @@
 from brownie import (
     TrueFreezeGovernor,
     frToken,
-    MockWETH,
     NonFungiblePositionManager,
     FRZtoken,
     MultiRewards,
     accounts,
     config,
+    network,
 )
-from brownie.network.gas.strategies import GasNowScalingStrategy
 from web3 import Web3
 
 DEPLOYER = accounts.add(config["wallets"]["from_key"])
-REQUIRED_CONFIRMATIONS = 1
+REQUIRED_CONFIRMATIONS = 4
 
 TOKEN_NAME = "frETH"
 TOKEN_SYMBOL = "frETH"
 FRZ_SUPPLY = Web3.toWei(1000000000, "Ether")
-WETH_ADDRESS = "0xc778417E063141139Fce010982780140Aa0cD5Ab"
+WETH_ADDRESS = config["networks"][network.show_active()]["WETH_ADDRESS"]
 DISTRIB_REWARDS_OVER = 7 * 86400
 
 
