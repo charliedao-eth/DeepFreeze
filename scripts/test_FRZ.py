@@ -36,7 +36,7 @@ frStaking = StakingRewards.deploy(DEPLOYER, frContract, _tx_params())
 frzToken = FRZtoken.deploy(
     accounts[0], frStaking, _tx_params()
 )  # Will change when tokenomic apply
-frStaking.addReward(frzToken, frStaking, 365 * 86400, _tx_params())
+frStaking.addReward(frzToken, frzToken, 365 * 86400, _tx_params())
 stakingContract = MultiRewards.deploy(DEPLOYER, frzToken, _tx_params())
 trueFreeze = TrueFreezeGovernor.deploy(
     WETH,
@@ -65,3 +65,5 @@ from brownie import chain
 chain.sleep(180 * 86400)
 chain.mine()
 frzToken.mint({"from": accounts[0]})
+frContract.approve(frStaking, frContract.balanceOf(user), {"from": user})
+frStaking.stake(frContract.balanceOf(user), {"from": user})

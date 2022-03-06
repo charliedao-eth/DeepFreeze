@@ -10,7 +10,15 @@ import pytest
 @pytest.mark.parametrize("amountToLock", [1, 4, 5])
 @pytest.mark.parametrize("timeToLock", [30, 89, 365, 730, 1095])
 def test_deposit(admin, alice, amountToLock, timeToLock):
-    WAsset, freth, nft, staking, frz, deepfreeze = deployAndParametrize(admin)
+    (
+        WAsset,
+        freth,
+        nft,
+        staking,
+        frz,
+        deepfreeze,
+        staking_frToken,
+    ) = deployAndParametrize(admin)
     amountToLock = Web3.toWei(amountToLock, "Ether")
     WAsset.deposit({"from": alice, "value": amountToLock})
     WAsset.approve(deepfreeze.address, amountToLock, {"from": alice})
@@ -29,7 +37,15 @@ def test_deposit(admin, alice, amountToLock, timeToLock):
 # Test locking and minting of frETH and NFT
 @pytest.mark.parametrize("timeToLock", [1, 3, 1300, 1101])
 def test_notLockingPeriod(admin, alice, timeToLock):
-    WAsset, freth, nft, staking, frz, deepfreeze = deployAndParametrize(admin)
+    (
+        WAsset,
+        freth,
+        nft,
+        staking,
+        frz,
+        deepfreeze,
+        staking_frToken,
+    ) = deployAndParametrize(admin)
     amountToLock = Web3.toWei(0.001, "Ether")
     WAsset.deposit({"from": alice, "value": amountToLock})
     WAsset.approve(deepfreeze.address, amountToLock, {"from": alice})
@@ -41,7 +57,15 @@ def test_notLockingPeriod(admin, alice, timeToLock):
 @pytest.mark.parametrize("amountToLock", [1, 4, 5])
 @pytest.mark.parametrize("timeToLock", [30, 89, 409, 201])
 def test_positionCorrect(admin, alice, amountToLock, timeToLock):
-    WAsset, freth, nft, staking, frz, deepfreeze = deployAndParametrize(admin)
+    (
+        WAsset,
+        freth,
+        nft,
+        staking,
+        frz,
+        deepfreeze,
+        staking_frToken,
+    ) = deployAndParametrize(admin)
     amountToLock = Web3.toWei(amountToLock, "Ether")
     WAsset.deposit({"from": alice, "value": amountToLock})
     WAsset.approve(deepfreeze.address, amountToLock, {"from": alice})
@@ -66,7 +90,15 @@ def test_positionCorrect(admin, alice, amountToLock, timeToLock):
 
 # Test progress computation
 def test_calculateProgress(admin, alice):
-    WAsset, freth, nft, staking, frz, deepfreeze = deployAndParametrize(admin)
+    (
+        WAsset,
+        freth,
+        nft,
+        staking,
+        frz,
+        deepfreeze,
+        staking_frToken,
+    ) = deployAndParametrize(admin)
     amountToLock = Web3.toWei(1, "Ether")
     WAsset.deposit({"from": alice, "value": amountToLock})
     WAsset.approve(deepfreeze.address, amountToLock, {"from": alice})
@@ -90,7 +122,15 @@ def test_calculateProgress(admin, alice):
 @pytest.mark.parametrize("amountToLock", [0.5, 0.03, 0.00001])
 @pytest.mark.parametrize("timeToLock", [30, 89, 409, 201])
 def test_unlockingCost(admin, alice, amountToLock, timeToLock):
-    WAsset, freth, nft, staking, frz, deepfreeze = deployAndParametrize(admin)
+    (
+        WAsset,
+        freth,
+        nft,
+        staking,
+        frz,
+        deepfreeze,
+        staking_frToken,
+    ) = deployAndParametrize(admin)
     amountToLock = Web3.toWei(amountToLock, "Ether")
     WAsset.deposit({"from": alice, "value": amountToLock})
     WAsset.approve(deepfreeze.address, amountToLock, {"from": alice})
@@ -139,7 +179,15 @@ def test_unlockingCost(admin, alice, amountToLock, timeToLock):
 # Test WAssetFees
 @pytest.mark.parametrize("amountToLock", [0.5, 0.03, 0.00001])
 def test_WAssetfees(admin, alice, amountToLock):
-    WAsset, freth, nft, staking, frz, deepfreeze = deployAndParametrize(admin)
+    (
+        WAsset,
+        freth,
+        nft,
+        staking,
+        frz,
+        deepfreeze,
+        staking_frToken,
+    ) = deployAndParametrize(admin)
     amountToLock = Web3.toWei(amountToLock, "Ether")
     WAsset.deposit({"from": alice, "value": amountToLock})
     WAsset.approve(deepfreeze.address, amountToLock, {"from": alice})

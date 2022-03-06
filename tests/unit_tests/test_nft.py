@@ -8,21 +8,45 @@ import pytest
 
 # Test onlyOwner can do
 def test_onlyOwner(admin, alice):
-    WAsset, freth, nft, staking, frz, deepfreeze = deploy_contracts(admin)
+    (
+        WAsset,
+        frtoken,
+        nft,
+        staking,
+        frz,
+        deepfreeze,
+        staking_frToken,
+    ) = deploy_contracts(admin)
     with pytest.raises(exceptions.VirtualMachineError):
         nft.setOnlyGovernor(alice, {"from": alice})
 
 
 # Test set onlyGovernance
 def test_Governance(admin):
-    WAsset, freth, nft, staking, frz, deepfreeze = deploy_contracts(admin)
+    (
+        WAsset,
+        frtoken,
+        nft,
+        staking,
+        frz,
+        deepfreeze,
+        staking_frToken,
+    ) = deploy_contracts(admin)
     nft.setOnlyGovernor(deepfreeze.address, {"from": admin})
     assert deepfreeze.address == nft.governorAddress({"from": admin})
 
 
 # Test mint token
 def test_NotMint(admin, alice):
-    WAsset, freth, nft, staking, frz, deepfreeze = deploy_contracts(admin)
+    (
+        WAsset,
+        frtoken,
+        nft,
+        staking,
+        frz,
+        deepfreeze,
+        staking_frToken,
+    ) = deploy_contracts(admin)
     nft.setOnlyGovernor(deepfreeze.address, {"from": admin})
     with pytest.raises(exceptions.VirtualMachineError):
         nft.mint(alice, 1, {"from": alice})
@@ -30,7 +54,15 @@ def test_NotMint(admin, alice):
 
 # Test mint token
 def test_NotBurn(admin, alice):
-    WAsset, freth, nft, staking, frz, deepfreeze = deployAndParametrize(admin)
+    (
+        WAsset,
+        freth,
+        nft,
+        staking,
+        frz,
+        deepfreeze,
+        staking_frToken,
+    ) = deployAndParametrize(admin)
     amountToLock = Web3.toWei(1, "Ether")
     WAsset.deposit({"from": alice, "value": amountToLock})
     WAsset.approve(deepfreeze.address, amountToLock, {"from": alice})
@@ -41,7 +73,15 @@ def test_NotBurn(admin, alice):
 
 # Test ownership of token
 def test_Ownership(admin, alice, bob):
-    WAsset, freth, nft, staking, frz, deepfreeze = deployAndParametrize(admin)
+    (
+        WAsset,
+        freth,
+        nft,
+        staking,
+        frz,
+        deepfreeze,
+        staking_frToken,
+    ) = deployAndParametrize(admin)
     amountToLock = Web3.toWei(1, "Ether")
     WAsset.deposit({"from": alice, "value": amountToLock})
     WAsset.approve(deepfreeze.address, amountToLock, {"from": alice})

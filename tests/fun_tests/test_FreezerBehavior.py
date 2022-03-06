@@ -9,7 +9,15 @@ import pytest
 # Test when withdraw after maturity
 @pytest.mark.parametrize("amountToLock", [0.001, 0.231, 0.321, 1.293])
 def test_fullProcess(admin, alice, amountToLock):
-    WAsset, freth, nft, staking, frz, deepfreeze = deployAndParametrize(admin)
+    (
+        WAsset,
+        freth,
+        nft,
+        staking,
+        frz,
+        deepfreeze,
+        staking_frToken,
+    ) = deployAndParametrize(admin)
     amountToLock = Web3.toWei(amountToLock, "Ether")
     WAsset.deposit({"from": alice, "value": amountToLock})
     WAsset.approve(deepfreeze.address, amountToLock, {"from": alice})
@@ -31,7 +39,15 @@ def test_fullProcess(admin, alice, amountToLock):
 
 # Test lock send to bob and bob withdraw
 def test_SendNFT(admin, alice, bob):
-    WAsset, freth, nft, staking, frz, deepfreeze = deployAndParametrize(admin)
+    (
+        WAsset,
+        freth,
+        nft,
+        staking,
+        frz,
+        deepfreeze,
+        staking_frToken,
+    ) = deployAndParametrize(admin)
     amountToLock = Web3.toWei(0.01, "Ether")
     WAsset.deposit({"from": alice, "value": amountToLock})
     WAsset.approve(deepfreeze.address, amountToLock, {"from": alice})
@@ -54,7 +70,15 @@ def test_SendNFT(admin, alice, bob):
 
 # Test malicious user reedem
 def test_reedem(admin, alice, bob):
-    WAsset, freth, nft, staking, frz, deepfreeze = deployAndParametrize(admin)
+    (
+        WAsset,
+        freth,
+        nft,
+        staking,
+        frz,
+        deepfreeze,
+        staking_frToken,
+    ) = deployAndParametrize(admin)
     amountToLock = Web3.toWei(0.01, "Ether")
     WAsset.deposit({"from": alice, "value": amountToLock})
     WAsset.approve(deepfreeze.address, amountToLock, {"from": alice})

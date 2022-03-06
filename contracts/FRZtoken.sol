@@ -23,7 +23,7 @@ contract FRZtoken is ERC20, Ownable {
     address private stakingContract;
 
     /* --------------- Constructor --------------*/
-
+    ///@dev mint the initial supply to the merkle tree contract
     constructor(address _merkleTreeAirdrop, address _stakingContract)
         public
         ERC20("TrueFreeze", "FRZ")
@@ -37,17 +37,18 @@ contract FRZtoken is ERC20, Ownable {
 
     /* --------------- External function --------------*/
 
+    ///@dev anyone can call the mint function, it will only mint to the contract to send to the staking contract to distribute to stakers
     function mint() external {
         require(block.timestamp > nextMintingDate, "Too early for minting");
         require(nYear < N_YEAR_TO_INFLATE, "All supply have been minted");
         nextMintingDate = getMintingSchedule();
+        nYear += 1;
         uint256 _tokenToMint = getTokenToMint();
         _mint(address(this), _tokenToMint);
         IMultiRewards(stakingContract).notifyRewardAmount(
             address(this),
             _tokenToMint
         );
-        nYear += 1;
     }
 
     /* --------------- View functions --------------*/
