@@ -9,6 +9,7 @@ contract MerkleDistributor is Ownable {
     address public FRZtoken;
     bytes32 public immutable merkleRoot;
     bool private isInitialized = false;
+    uint256 public immutable selfDestructDate;
 
     // This is a packed array of booleans.
     mapping(uint256 => uint256) private claimedBitMap;
@@ -17,6 +18,7 @@ contract MerkleDistributor is Ownable {
 
     constructor(bytes32 merkleRoot_) {
         merkleRoot = merkleRoot_;
+        selfDestructDate = block.timestamp + (183 * 86400);
     }
 
     function initialize(address _token) external onlyOwner {
@@ -65,5 +67,14 @@ contract MerkleDistributor is Ownable {
         );
 
         emit Claimed(index, account, amount);
+    }
+
+    /// @dev after 6 months owner can transfer remaining token and destruct the contract
+    function transferAndDestruct() external onlyOwner {
+        require(block.timestamp > selfDestructDate, "Too soon to do that");
+        address _owner = owner();
+        uint256 remainingToken = IERC20(FRZtoken).balanceOf(address(this));
+        IERC20(FRZtoken).transfer(_owner, remainingToken);
+        selfdestruct(payable(_owner));
     }
 }

@@ -32,7 +32,7 @@ contract FRZtoken is ERC20, Ownable {
         _approve(address(this), stakingContract, MAX_UINT);
         _mint(_merkleTreeAirdrop, INITIAL_SUPPLY);
         deployedDate = block.timestamp;
-        nextMintingDate = deployedDate; // init function that make everything
+        nextMintingDate = deployedDate;
     }
 
     /* --------------- External function --------------*/
@@ -42,8 +42,8 @@ contract FRZtoken is ERC20, Ownable {
         require(block.timestamp > nextMintingDate, "Too early for minting");
         require(nYear < N_YEAR_TO_INFLATE, "All supply have been minted");
         nextMintingDate = getMintingSchedule();
-        nYear += 1;
         uint256 _tokenToMint = getTokenToMint();
+        nYear += 1;
         _mint(address(this), _tokenToMint);
         IMultiRewards(stakingContract).notifyRewardAmount(
             address(this),

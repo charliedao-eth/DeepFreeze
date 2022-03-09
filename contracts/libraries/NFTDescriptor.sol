@@ -34,6 +34,11 @@ library NFTDescriptor {
         );
 
         string memory imageURI = Base64.encode(bytes(generateSVG(params)));
+        string memory attributes = generateAttributes(
+            _amountLocked,
+            _lockingDate,
+            _maturityDate
+        );
         return
             string(
                 abi.encodePacked(
@@ -46,7 +51,9 @@ library NFTDescriptor {
                                 '", "description":"This NFT represent a locked position in TrueFreeze protocol", "image":"',
                                 "data:image/svg+xml;base64,",
                                 imageURI,
-                                '"}'
+                                '","attributes": ',
+                                attributes,
+                                "}"
                             )
                         )
                     )
@@ -57,7 +64,7 @@ library NFTDescriptor {
     function _constructParamsTokenURI(
         uint256 _amountLocked,
         uint256 _lockingDate,
-        uint256 _maturityDate // here maybe get the tokenID that will query ?
+        uint256 _maturityDate
     ) internal pure returns (paramsTokenURI memory) {
         (uint256 n1, uint256 n2, uint256 n3) = Utils.getIntAndDigit(
             _amountLocked
@@ -68,18 +75,72 @@ library NFTDescriptor {
         (uint256 y2, uint256 m2, uint256 d2) = Utils.timestampToDate(
             _maturityDate
         );
+
+        string memory sm1;
+        string memory sm2;
+        string memory sd1;
+        string memory sd2;
+        if (m1 < 10) {
+            sm1 = string(abi.encodePacked("0", Utils.uint2str(m1)));
+        } else {
+            sm1 = Utils.uint2str(m1);
+        }
+
+        if (m2 < 10) {
+            sm2 = string(abi.encodePacked("0", Utils.uint2str(m2)));
+        } else {
+            sm2 = Utils.uint2str(m2);
+        }
+
+        if (d1 < 10) {
+            sd1 = string(abi.encodePacked("0", Utils.uint2str(d1)));
+        } else {
+            sd1 = Utils.uint2str(d1);
+        }
+
+        if (d2 < 10) {
+            sd2 = string(abi.encodePacked("0", Utils.uint2str(d2)));
+        } else {
+            sd2 = Utils.uint2str(d1);
+        }
+
         return
             paramsTokenURI({
                 n1: Utils.uint2str(n1),
                 n2: Utils.uint2str(n2),
                 n3: Utils.uint2str(n3),
                 y1: Utils.uint2str(y1),
-                m1: Utils.uint2str(m1),
-                d1: Utils.uint2str(d1),
+                m1: sm1,
+                d1: sd1,
                 y2: Utils.uint2str(y2),
-                m2: Utils.uint2str(m2),
-                d2: Utils.uint2str(d2)
+                m2: sm2,
+                d2: sd2
             });
+    }
+
+    function generateAttributes(
+        uint256 _amountLocked,
+        uint256 _lockingDate,
+        uint256 _maturityDate
+    ) internal pure returns (string memory attributes) {
+        (uint256 n1, uint256 n2, uint256 n3) = Utils.getIntAndDigit(
+            _amountLocked
+        );
+        return
+            string(
+                abi.encodePacked(
+                    '[{"trait_type": "Amount locked", "value":',
+                    Utils.uint2str(n1),
+                    ".",
+                    Utils.uint2str(n2),
+                    Utils.uint2str(n3),
+                    '},{"display_type": "date", "trait_type": "Locking date", "value":',
+                    Utils.uint2str(_lockingDate),
+                    '},{"display_type": "date", "trait_type": "Maturity date", "value":',
+                    Utils.uint2str(_maturityDate),
+                    "}]"
+                )
+            );
     }
 
     function generateSVG(paramsTokenURI memory _params)
