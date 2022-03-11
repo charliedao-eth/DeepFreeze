@@ -240,11 +240,11 @@ library NFTDescriptor {
             string(
                 abi.encodePacked(
                     '<text text-anchor="middle" class="date-text" x="200" y="165">',
-                    _params.y1,
+                    _params.y2,
                     "-",
-                    _params.m1,
+                    _params.m2,
                     "-",
-                    _params.d1,
+                    _params.d2,
                     '</text>      <text text-anchor="middle" class="date-label" x="200" y="200">',
                     "Maturity Date</text>"
                 )
@@ -261,11 +261,11 @@ library NFTDescriptor {
                 abi.encodePacked(
                     '<rect class="gradient-border" x="75" y="220" width="250" height="90" rx="20" transform="translate(0,0)"/>',
                     '<text text-anchor="middle" class="date-text" x="200" y="265">',
-                    _params.y2,
+                    _params.y1,
                     "-",
-                    _params.m2,
+                    _params.m1,
                     "-",
-                    _params.d2,
+                    _params.d1,
                     '</text>      <text text-anchor="middle" class="date-label" x="200" y="300">',
                     "Lock Date </text>    </g>  </g>"
                 )
