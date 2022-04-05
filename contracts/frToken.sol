@@ -15,10 +15,7 @@ contract frToken is ERC20, ERC20Burnable, Ownable {
 
     /* ------------------ Constructor --------------*/
 
-    constructor(string memory name, string memory symbol)
-        public
-        ERC20(name, symbol)
-    {
+    constructor(string memory name, string memory symbol) ERC20(name, symbol) {
         isInitialized = false;
     }
 

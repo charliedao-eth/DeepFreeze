@@ -34,7 +34,7 @@ def deploy_NFTPosition(admin):
 
 
 def deploy_FRZtoken(admin, staking_frToken):
-    frz = FRZtoken.deploy(admin, staking_frToken, {"from": admin})
+    frz = FRZtoken.deploy(admin, staking_frToken, "FRZ", {"from": admin})
     return frz
 
 

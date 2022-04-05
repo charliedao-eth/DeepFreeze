@@ -24,10 +24,11 @@ contract FRZtoken is ERC20, Ownable {
 
     /* --------------- Constructor --------------*/
     ///@dev mint the initial supply to the merkle tree contract
-    constructor(address _merkleTreeAirdrop, address _stakingContract)
-        public
-        ERC20("TrueFreeze", "FRZ")
-    {
+    constructor(
+        address _merkleTreeAirdrop,
+        address _stakingContract,
+        string memory symbol
+    ) public ERC20("TrueFreeze", symbol) {
         stakingContract = _stakingContract;
         _approve(address(this), stakingContract, MAX_UINT);
         _mint(_merkleTreeAirdrop, INITIAL_SUPPLY);

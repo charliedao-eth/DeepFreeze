@@ -147,13 +147,11 @@ contract TrueFreezeGovernor is Ownable, ReentrancyGuard {
         uint256 progress = getProgress(_tokenId);
         if (progress >= 100) {
             // if progress > 100 sending back asset
-            wAsset.approve(msg.sender, amountLocked);
             wAsset.transfer(msg.sender, amountLocked);
             emit withdrawedWAsset(msg.sender, _tokenId, amountLocked, 0, 0);
         } else if (progress < 100) {
             // if progress < 100 user need to pay a wAsset fee
             uint256 sendToUser = amountLocked - feesToPay;
-            wAsset.approve(msg.sender, sendToUser);
             wAsset.transfer(msg.sender, sendToUser);
             stakingContract.notifyRewardAmount(address(wAsset), feesToPay);
 
@@ -309,7 +307,7 @@ contract TrueFreezeGovernor is Ownable, ReentrancyGuard {
         returns (uint256, uint256)
     {
         uint256 toSend = (_penaltyPaid - _tokenMinted) / 2;
-        uint256 toBurn = _tokenMinted + (_penaltyPaid - _tokenMinted) / 2;
+        uint256 toBurn = _tokenMinted + (_penaltyPaid - _tokenMinted) - toSend;
         return (toSend, toBurn);
     }
 }
