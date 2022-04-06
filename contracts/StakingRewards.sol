@@ -27,7 +27,7 @@ contract StakingRewards is ReentrancyGuard {
 
     uint256 private _totalSupply;
     mapping(address => uint256) private _balances;
-    address owner;
+    address private owner;
 
     /* ========== CONSTRUCTOR ========== */
 
