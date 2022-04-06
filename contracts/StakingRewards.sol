@@ -2,7 +2,7 @@ pragma solidity 0.5.17;
 
 import "./MultiRewards.sol";
 
-contract StakingRewards is ReentrancyGuard, Pausable {
+contract StakingRewards is ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -27,11 +27,18 @@ contract StakingRewards is ReentrancyGuard, Pausable {
 
     uint256 private _totalSupply;
     mapping(address => uint256) private _balances;
+    address owner;
 
     /* ========== CONSTRUCTOR ========== */
 
-    constructor(address _owner, address _stakingToken) public Owned(_owner) {
+    constructor(address _owner, address _stakingToken) public {
         stakingToken = IERC20(_stakingToken);
+        owner = _owner;
+    }
+
+    modifier onlyOwner() {
+        require(owner == msg.sender, "Ownable: caller is not the owner");
+        _;
     }
 
     function addReward(
@@ -121,7 +128,6 @@ contract StakingRewards is ReentrancyGuard, Pausable {
     function stake(uint256 amount)
         external
         nonReentrant
-        notPaused
         updateReward(msg.sender)
     {
         require(amount > 0, "Cannot stake 0");

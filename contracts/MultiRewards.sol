@@ -134,90 +134,6 @@ library Math {
     }
 }
 
-contract Owned {
-    address public owner;
-    address public nominatedOwner;
-
-    constructor(address _owner) public {
-        require(_owner != address(0), "Owner address cannot be 0");
-        owner = _owner;
-        emit OwnerChanged(address(0), _owner);
-    }
-
-    function nominateNewOwner(address _owner) external onlyOwner {
-        nominatedOwner = _owner;
-        emit OwnerNominated(_owner);
-    }
-
-    function acceptOwnership() external {
-        require(
-            msg.sender == nominatedOwner,
-            "You must be nominated before you can accept ownership"
-        );
-        emit OwnerChanged(owner, nominatedOwner);
-        owner = nominatedOwner;
-        nominatedOwner = address(0);
-    }
-
-    modifier onlyOwner() {
-        _onlyOwner();
-        _;
-    }
-
-    function _onlyOwner() private view {
-        require(
-            msg.sender == owner,
-            "Only the contract owner may perform this action"
-        );
-    }
-
-    event OwnerNominated(address newOwner);
-    event OwnerChanged(address oldOwner, address newOwner);
-}
-
-contract Pausable is Owned {
-    uint256 public lastPauseTime;
-    bool public paused;
-
-    constructor() internal {
-        // This contract is abstract, and thus cannot be instantiated directly
-        require(owner != address(0), "Owner must be set");
-        // Paused will be false, and lastPauseTime will be 0 upon initialisation
-    }
-
-    /**
-     * @notice Change the paused state of the contract
-     * @dev Only the contract owner may call this.
-     */
-    function setPaused(bool _paused) external onlyOwner {
-        // Ensure we're actually changing the state before we do anything
-        if (_paused == paused) {
-            return;
-        }
-
-        // Set our paused state.
-        paused = _paused;
-
-        // If applicable, set the last pause time.
-        if (paused) {
-            lastPauseTime = now;
-        }
-
-        // Let everyone know that our pause state has changed.
-        emit PauseChanged(paused);
-    }
-
-    event PauseChanged(bool isPaused);
-
-    modifier notPaused() {
-        require(
-            !paused,
-            "This action cannot be performed while the contract is paused"
-        );
-        _;
-    }
-}
-
 contract ReentrancyGuard {
     /// @dev counter to allow mutex lock with only one SSTORE operation
     uint256 private _guardCounter;
@@ -453,7 +369,7 @@ library SafeMath {
     }
 }
 
-contract MultiRewards is ReentrancyGuard, Pausable {
+contract MultiRewards is ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -478,11 +394,18 @@ contract MultiRewards is ReentrancyGuard, Pausable {
 
     uint256 private _totalSupply;
     mapping(address => uint256) private _balances;
+    address owner;
 
     /* ========== CONSTRUCTOR ========== */
 
-    constructor(address _owner, address _stakingToken) public Owned(_owner) {
+    constructor(address _owner, address _stakingToken) public {
         stakingToken = IERC20(_stakingToken);
+        owner = _owner;
+    }
+
+    modifier onlyOwner() {
+        require(owner == msg.sender, "Ownable: caller is not the owner");
+        _;
     }
 
     function addReward(
@@ -572,7 +495,6 @@ contract MultiRewards is ReentrancyGuard, Pausable {
     function stake(uint256 amount)
         external
         nonReentrant
-        notPaused
         updateReward(msg.sender)
     {
         require(amount > 0, "Cannot stake 0");
