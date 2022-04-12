@@ -4,10 +4,9 @@ const keccak256 = require('keccak256')
 
 
 const users = [
-    { index: 0, address: "0x66aB6D9362d4F35596279692F0251Db635165871", amount: 10 },
-    { index: 1, address: "0x33A4622B82D4c04a53e170c638B944ce27cffce3", amount: 15 },
-    { index: 2, address: "0x0063046686E46Dc6F15918b61AE2B121458534a5", amount: 20 },
-    { index: 3, address: "0x21b42413bA931038f35e7A5224FaDb065d297Ba3", amount: 30 },
+    { index: 0, address: "0x96b6de62f4cCb4381937b8446D5F0aA7c153aC29", amount: 1000000000000000000000n },
+    { index: 1, address: "0x39E856863e5F6f0654a0b87B12bc921DA23D06BB", amount: 2000000000000000000000n },
+    { index: 2, address: "0x459d04Fc1e24f1699846b8B88a270bC68aA71f46", amount: 3000000000000000000000n },
 ];
 
 // equal to MerkleDistributor.sol #keccak256(abi.encodePacked(account, amount));
@@ -19,7 +18,7 @@ const merkleTree = new MerkleTree(elements, keccak256, { sort: true });
 
 const root = merkleTree.getHexRoot();
 
-const leaf = elements[1];
+const leaf = elements[0]; // To get the proof of the address change the idx of elements
 const proof = merkleTree.getHexProof(leaf);
 console.log(root);
 console.log(proof)

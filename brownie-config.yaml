@@ -8,7 +8,7 @@ networks:
   rinkeby:
     frTokenName: "frETH"
     frTokenSymbol: "frETH"
-    FRZ_SYMBOL: "FRZ"
+    FRZ_SYMBOL: "FRZ-r"
     WASSET_ADDRESS: "0xc778417E063141139Fce010982780140Aa0cD5Ab"
     publish: True
   kovan:

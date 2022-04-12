@@ -151,12 +151,15 @@ contract TrueFreezeGovernor is Ownable, ReentrancyGuard {
             emit withdrawedWAsset(msg.sender, _tokenId, amountLocked, 0, 0);
         } else if (progress < 100) {
             // if progress < 100 user need to pay a wAsset fee
+            uint256 frPenalty = getUnlockCost(_tokenId);
+            require(
+                frToken.transferFrom(msg.sender, address(this), frPenalty),
+                "Transfer failed"
+            );
+
             uint256 sendToUser = amountLocked - feesToPay;
             wAsset.transfer(msg.sender, sendToUser);
             stakingContract.notifyRewardAmount(address(wAsset), feesToPay);
-
-            uint256 frPenalty = getUnlockCost(_tokenId);
-            frToken.transferFrom(msg.sender, address(this), frPenalty);
 
             if (progress <= 67) {
                 // if progress < 67 user need to pay a wAsset fee and frToken fee

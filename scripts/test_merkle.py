@@ -1,14 +1,21 @@
 from brownie import FRZtoken, MerkleDistributor
+from scripts.deploy_main import DEPLOYER
 
 merkle = MerkleDistributor.deploy(
-    "0x37e5906e14199d5bed9cd6052ba795e68e8025ba46a4b2f7f4d92a31fde66411",
+    "0x2823d7df030bc8e00ae6a7b9891c14720a60c3d97d2d639ce68249f57783768a",
     {"from": accounts[0]},
 )
-token = FRZtoken.deploy(merkle, accounts[6], {"from": accounts[0]})
+token = FRZtoken.deploy(merkle, accounts[6], "FRZ", {"from": accounts[0]})
 merkle.initialize(token, {"from": accounts[0]})
 
 proof = [
-    "0xc9c20ecb5de271fc871e09dfd5cbb8e96f10f37481f4a201bde8964ae39da423",
-    "0x606212bf954a7fa9cbfb5441ff569117b57ee0c5d1dafbcb4ddd3ec60cce7dfd",
+    "0x3c60e097c59a73bdfc01ec9b48e4931ff32d2fce7d11ece3e97487cfaa600bcf",
+    "0xd999846254f1dce87979409b2ce6aa0e4d0106304f9fbf3861f902551b08a226",
 ]
-merkle.claim(1, accounts[1].address, 15, proof, {"from": accounts[1]})
+tx = merkle.claim(
+    0,
+    "0x96b6de62f4cCb4381937b8446D5F0aA7c153aC29",
+    1000000000000000000000,
+    proof,
+    {"from": DEPLOYER},
+)

@@ -39,7 +39,7 @@ def main():
 
     # Deploy merkle tree
     merkle = MerkleDistributor.deploy(
-        "0x37e5906e14199d5bed9cd6052ba795e68e8025ba46a4b2f7f4d92a31fde66411",
+        "0xc54a775732dc2f2f2da0f6021b744201a2c185a37ff9b7abc607e85f39ba6af1",
         _tx_params(),
         publish_source=PUBLISHED,
     )
@@ -55,7 +55,7 @@ def main():
     )
 
     # Init Merkle contract & Staking contract
-    merkle.initialize(frContract, _tx_params())
+    merkle.initialize(frzToken, _tx_params())
     frStaking.addReward(frzToken, frzToken, frToken_DISTRIB_REWARDS_OVER, _tx_params())
 
     # Deploy FRZ staking contract
@@ -79,6 +79,7 @@ def main():
     )
 
     # Set TrueFreeze admin
+
     frContract.setOnlyGovernor(trueFreeze.address, _tx_params())
     nftContract.setOnlyGovernor(trueFreeze.address, _tx_params())
 
