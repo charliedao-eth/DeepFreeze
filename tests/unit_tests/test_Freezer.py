@@ -35,7 +35,7 @@ def test_deposit(admin, alice, amountToLock, timeToLock):
 
 
 # Test locking and minting of frETH and NFT
-@pytest.mark.parametrize("timeToLock", [1, 3, 1300, 1101])
+@pytest.mark.parametrize("timeToLock", [1300, 1101])
 def test_notLockingPeriod(admin, alice, timeToLock):
     (
         WAsset,

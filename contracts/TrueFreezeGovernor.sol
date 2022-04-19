@@ -15,7 +15,7 @@ import "../interfaces/INonFungiblePositionManager.sol";
 
 contract TrueFreezeGovernor is Ownable, ReentrancyGuard {
     uint256 internal constant N_DAYS = 365;
-    uint256 internal constant MIN_LOCK_DAYS = 7;
+    uint256 internal constant MIN_LOCK_DAYS = 1;
     uint256 internal constant MAX_LOCK_DAYS = 1100;
     uint256 internal constant MAX_UINT = 2**256 - 1;
 
