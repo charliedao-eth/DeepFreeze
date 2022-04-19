@@ -22,3 +22,12 @@ const leaf = elements[0]; // To get the proof of the address change the idx of e
 const proof = merkleTree.getHexProof(leaf);
 console.log(root);
 console.log(proof)
+
+const merkleJsonExport = users.map(function(user, index) {
+    return Object.assign({}, user, {
+        amount: user.amount.toString(),
+        merkleProof: merkleTree.getHexProof(elements[index])
+    })
+});
+
+console.log(JSON.stringify(merkleJsonExport));
