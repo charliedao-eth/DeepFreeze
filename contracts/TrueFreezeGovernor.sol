@@ -128,7 +128,7 @@ contract TrueFreezeGovernor is Ownable, ReentrancyGuard {
             "Not the owner of tokenId"
         );
         require(
-            _positions[_tokenId].active = true,
+            _positions[_tokenId].active == true,
             "Position already withdrawed"
         );
 

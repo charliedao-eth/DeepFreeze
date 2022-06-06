@@ -215,7 +215,7 @@ library NFTDescriptor {
                     _params.n3,
                     "</text>",
                     '<text text-anchor="middle" class="date-label" x="200" y="100">',
-                    "WETH</text>    </g>"
+                    "WMATIC</text>    </g>"
                 )
             );
     }

@@ -3,11 +3,7 @@ const { MerkleTree } = require('merkletreejs');
 const keccak256 = require('keccak256')
 
 
-const users = [
-    { index: 0, address: "0x96b6de62f4cCb4381937b8446D5F0aA7c153aC29", amount: 1000000000000000000000n },
-    { index: 1, address: "0x39E856863e5F6f0654a0b87B12bc921DA23D06BB", amount: 2000000000000000000000n },
-    { index: 2, address: "0x459d04Fc1e24f1699846b8B88a270bC68aA71f46", amount: 3000000000000000000000n },
-];
+const users = require('./airdrop_needs1e18.json');
 
 // equal to MerkleDistributor.sol #keccak256(abi.encodePacked(account, amount));
 const elements = users.map((x) =>
@@ -23,7 +19,7 @@ const proof = merkleTree.getHexProof(leaf);
 console.log(root);
 console.log(proof)
 
-const merkleJsonExport = users.map(function(user, index) {
+const merkleJsonExport = users.map(function (user, index) {
     return Object.assign({}, user, {
         amount: user.amount.toString(),
         merkleProof: merkleTree.getHexProof(elements[index])
