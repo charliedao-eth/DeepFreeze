@@ -22,7 +22,7 @@ FRZ_SYMBOL = config["networks"][network.show_active()]["FRZ_SYMBOL"]
 WASSET_ADDRESS = config["networks"][network.show_active()]["WASSET_ADDRESS"]
 FRZ_DISTRIB_REWARDS_OVER = 7 * 86400
 frToken_DISTRIB_REWARDS_OVER = 365 * 86400
-MERKLE_TREE = # Insert new merkle root 
+MERKLE_TREE = "0x321aa79c920646eff61b26444df328c88e8a87a722b0a51865510a07ffa63b3d"  # Insert new merkle root
 
 
 def _tx_params():
@@ -31,71 +31,68 @@ def _tx_params():
         "required_confs": REQUIRED_CONFIRMATIONS,
     }
 
-
-def main():
     # Deploy frToken
-    frContract = frToken.deploy(
-        frTOKEN_NAME, frTOKEN_SYMBOL, _tx_params(), publish_source=PUBLISHED
-    )
 
-    # Deploy merkle tree
-    merkle = MerkleDistributor.deploy(
-        MERKLE_TREE,
-        _tx_params(),
-        publish_source=PUBLISHED,
-    )
 
-    # Deploy frToken staking contract
-    frStaking = StakingRewards.deploy(
-        DEPLOYER, frContract, _tx_params(), publish_source=PUBLISHED
-    )
+frContract = frToken.deploy(
+    frTOKEN_NAME, frTOKEN_SYMBOL, _tx_params(), publish_source=PUBLISHED
+)
 
-    # Deploy merkle tree
-    frzToken = FRZtoken.deploy(
-        merkle, frStaking, FRZ_SYMBOL, _tx_params(), publish_source=PUBLISHED
-    )
+# Deploy merkle tree
+merkle = MerkleDistributor.deploy(
+    MERKLE_TREE,
+    _tx_params(),
+    publish_source=PUBLISHED,
+)
 
-    # Init Merkle contract & Staking contract
-    merkle.initialize(frzToken, _tx_params())
-    frStaking.addReward(frzToken, frzToken, frToken_DISTRIB_REWARDS_OVER, _tx_params())
+# Deploy frToken staking contract
+frStaking = StakingRewards.deploy(
+    DEPLOYER, frContract, _tx_params(), publish_source=PUBLISHED
+)
 
-    # Deploy FRZ staking contract
-    stakingContract = MultiRewards.deploy(
-        DEPLOYER, frzToken, _tx_params(), publish_source=PUBLISHED
-    )
+# Deploy merkle tree
+frzToken = FRZtoken.deploy(
+    merkle, frStaking, FRZ_SYMBOL, _tx_params(), publish_source=PUBLISHED
+)
 
-    # Deploy NFT contract
-    nftContract = NonFungiblePositionManager.deploy(
-        _tx_params(), publish_source=PUBLISHED
-    )
+# Init Merkle contract & Staking contract
+merkle.initialize(frzToken, _tx_params())
+frStaking.addReward(frzToken, frzToken, frToken_DISTRIB_REWARDS_OVER, _tx_params())
 
-    # Deploy TrueFreezeGovernor
-    trueFreeze = TrueFreezeGovernor.deploy(
-        WASSET_ADDRESS,
-        frContract,
-        nftContract,
-        stakingContract,
-        _tx_params(),
-        publish_source=PUBLISHED,
-    )
+# Deploy FRZ staking contract
+stakingContract = MultiRewards.deploy(
+    DEPLOYER, frzToken, _tx_params(), publish_source=PUBLISHED
+)
 
-    # Set TrueFreeze admin
+# Deploy NFT contract
+nftContract = NonFungiblePositionManager.deploy(_tx_params(), publish_source=PUBLISHED)
 
-    frContract.setOnlyGovernor(trueFreeze.address, _tx_params())
-    nftContract.setOnlyGovernor(trueFreeze.address, _tx_params())
+# Deploy TrueFreezeGovernor
+trueFreeze = TrueFreezeGovernor.deploy(
+    WASSET_ADDRESS,
+    frContract,
+    nftContract,
+    stakingContract,
+    _tx_params(),
+    publish_source=PUBLISHED,
+)
 
-    # Configure staking contract
-    stakingContract.addReward(
-        WASSET_ADDRESS, trueFreeze, FRZ_DISTRIB_REWARDS_OVER, _tx_params()
-    )
-    stakingContract.addReward(
-        frContract, trueFreeze, FRZ_DISTRIB_REWARDS_OVER, _tx_params()
-    )
+# Set TrueFreeze admin
+frContract.setOnlyGovernor(trueFreeze.address, _tx_params())
+nftContract.setOnlyGovernor(trueFreeze.address, _tx_params())
 
-    print(f"frToken deployed at {frContract}")
-    print(f"FRZ deployed at {frzToken}")
-    print(f"Merkle tree deployed at {merkle}")
-    print(f"NonFungiblePositionManager deployed at {nftContract}")
-    print(f"frToken Staking contract deployed at {frStaking}")
-    print(f"FRZ Staking contract deployed at {stakingContract}")
-    print(f"TrueFreezeGovernor deployed at {trueFreeze}")
+# Configure staking contract
+stakingContract.addReward(
+    WASSET_ADDRESS, trueFreeze, FRZ_DISTRIB_REWARDS_OVER, _tx_params()
+)
+stakingContract.addReward(
+    frContract, trueFreeze, FRZ_DISTRIB_REWARDS_OVER, _tx_params()
+)
+
+print(f"frToken deployed at {frContract}")
+print(f"FRZ deployed at {frzToken}")
+print(f"Merkle tree deployed at {merkle}")
+print(f"NonFungiblePositionManager deployed at {nftContract}")
+print(f"frToken Staking contract deployed at {frStaking}")
+print(f"FRZ Staking contract deployed at {stakingContract}")
+print(f"TrueFreezeGovernor deployed at {trueFreeze}")
