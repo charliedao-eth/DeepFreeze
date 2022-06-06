@@ -3,7 +3,7 @@ const { MerkleTree } = require('merkletreejs');
 const keccak256 = require('keccak256')
 
 
-const users = require('./airdrop_needs1e18.json');
+const users = require('./airdrop_needs1e18_formatted.json');
 
 // equal to MerkleDistributor.sol #keccak256(abi.encodePacked(account, amount));
 const elements = users.map((x) =>

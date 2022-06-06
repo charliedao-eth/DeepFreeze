@@ -22,7 +22,7 @@ FRZ_SYMBOL = config["networks"][network.show_active()]["FRZ_SYMBOL"]
 WASSET_ADDRESS = config["networks"][network.show_active()]["WASSET_ADDRESS"]
 FRZ_DISTRIB_REWARDS_OVER = 7 * 86400
 frToken_DISTRIB_REWARDS_OVER = 365 * 86400
-MERKLE_TREE = "0xc54a775732dc2f2f2da0f6021b744201a2c185a37ff9b7abc607e85f39ba6af1"
+MERKLE_TREE = # Insert new merkle root 
 
 
 def _tx_params():
