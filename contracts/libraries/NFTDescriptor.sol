@@ -101,7 +101,7 @@ library NFTDescriptor {
         if (d2 < 10) {
             sd2 = string(abi.encodePacked("0", Utils.uint2str(d2)));
         } else {
-            sd2 = Utils.uint2str(d1);
+            sd2 = Utils.uint2str(d2);
         }
 
         return
